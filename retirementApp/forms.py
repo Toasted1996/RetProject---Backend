@@ -46,3 +46,5 @@ class ExpedienteForm(forms.ModelForm):
             fecha_vencimiento = self.cleaned_data.get('fecha_vencimiento')
             if fecha_vencimiento and fecha_vencimiento <= timezone.now().date():
                 raise forms.ValidationError('La fecha de vencimiento debe ser futura')
+            return fecha_vencimiento
+        
