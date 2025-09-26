@@ -16,7 +16,7 @@ class GestorForm(forms.ModelForm):
         }
         
     #validacion adicional para el campo RUT
-    def cleanerRut(self):
+    def clean_rut(self):
         rut = self.cleaned_data.get('rut')
         if rut:
             #Elimina puntos y guiones
@@ -42,9 +42,9 @@ class ExpedienteForm(forms.ModelForm):
         }
         
         #Validacion para que fecha de vencimiento sea > a fecha actual
-        def clean_fecha_vencimiento(self):
-            fecha_vencimiento = self.cleaned_data.get('fecha_vencimiento')
-            if fecha_vencimiento and fecha_vencimiento <= timezone.now().date():
-                raise forms.ValidationError('La fecha de vencimiento debe ser futura')
-            return fecha_vencimiento
+    def clean_fecha_vencimiento(self):
+        fecha_vencimiento = self.cleaned_data.get('fecha_vencimiento')
+        if fecha_vencimiento and fecha_vencimiento <= timezone.now().date():
+            raise forms.ValidationError('La fecha de vencimiento debe ser futura')
+        return fecha_vencimiento
         

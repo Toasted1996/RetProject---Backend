@@ -16,8 +16,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from retirementApp.views import inicio
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('retirementApp.urls')),
+    path('', inicio, name= 'inicio'),
+    
+    #path para rutas de retirementApp
+    path('gestores/', include('retirementApp.urls'))
+
 ]
+
+# Configuración para archivos estáticos (CSS, JS, imágenes del proyecto)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Configuración para archivos media (imágenes subidas por usuarios)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
