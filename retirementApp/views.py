@@ -53,4 +53,42 @@ def listaGestores(request):
     }
     return render(request, 'gestores/gestores.html', data)
 
+def editarGestor(request, id):
+    #buscamos gestor por id
+    gestor = get_object_or_404(Gestor, id=id)
+    #validamos si es post
+    if request.method == 'POST':
+        #Procesa formulario con modelo existente
+        form = GestorForm(request.POST, instance=gestor)
+        #Si es valido, guarda
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Gestor actualizado exitosamente')
+            return redirect('gestores') #Redirije a la lista de gestores
+        else: 
+            messages.error(request, 'Corrija los errores en el formulario')
+    else:
+        form = GestorForm(instance=gestor) 
+            
+    data = {
+        'titulo':'Editar Gestor',
+        'form': form
+    }
+    return render(request, 'gestores/createGestor.html', data)
 
+
+
+#vista para eliminar un gestor
+def eliminarGestor(request, id):
+    #Buscamos el gestor por id
+    gestor = get_object_or_404(Gestor, id=id)
+    #Si es post, eliminamos
+    if request.method == 'POST':
+        nombre = f'{gestor.nombre}{gestor.apellido}'
+        gestor.delete()
+        messages.success(request, f'Gestor {nombre} ha sidoa eliminado correctamente')
+        return redirect ('gestores')    
+    data = {
+        'titulo':'Confirmar Eliminacion', 
+        'gestor': gestor
+    }
