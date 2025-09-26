@@ -35,7 +35,6 @@ def crearGestor(request):
     #renderizamos el template con los datos
     return render(request, 'gestores/createGestor.html', data)
 
-
 #view para lista todos los gestores con filtro y busqueda
 def listaGestores(request):
     gestores = Gestor.objects.all()
@@ -76,8 +75,6 @@ def editarGestor(request, id):
     }
     return render(request, 'gestores/createGestor.html', data)
 
-
-
 #vista para eliminar un gestor
 def eliminarGestor(request, id):
     #Buscamos el gestor por id
@@ -92,3 +89,4 @@ def eliminarGestor(request, id):
         'titulo':'Confirmar Eliminacion', 
         'gestor': gestor
     }
+    

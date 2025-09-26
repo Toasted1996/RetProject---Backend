@@ -1,6 +1,7 @@
 #importaremos timezone para validar fechas
 from datetime import timezone
 from django import forms
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import Gestor, Expediente
 
 #Formulario para el modelo gestor con validaciones para rut
@@ -47,4 +48,16 @@ class ExpedienteForm(forms.ModelForm):
         if fecha_vencimiento and fecha_vencimiento <= timezone.now().date():
             raise forms.ValidationError('La fecha de vencimiento debe ser futura')
         return fecha_vencimiento
-        
+
+
+#Formulario integrado para LOGIN customizado usando AuthenticationForm        
+class CustomLoginForm(AuthenticationForm): #AuthenticationForm ya tiene una logica de validacion
+    username = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Usuario','autofocus': True}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Contraseña'}))
+    
+#Formulario integrado para REGISTRO usando UserCreationForm
+class CustomUserCreationForm(UserCreationForm):
+    username = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Usuario', 'autofocus' : True}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder':'Email'}))
+    password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput(attrs={'class':'form-control','placeholder':'Contraseña'}))
+    password2 = forms.CharField(label='Confirmar Contraseña', widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Confirmar Contraseña'}))
