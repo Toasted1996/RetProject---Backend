@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Sistema de Auditorías{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/gestores.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">
+                        <i class="fas fa-users me-2 text-gradient"></i>Gestores de Pensiones
+                    </h1>
+                    <p class="text-muted mb-0">Administra y supervisa los gestores del sistema</p>
+                </div>
+                <div>
+                    <a href="{% url 'crear_gestor' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nuevo Gestor
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Mini Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-mini">
+                <h4 class="mb-1">{{ gestores|length }}</h4>
+                <small>Total Gestores</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-mini stats-success">
+                <h4 class="mb-1">{{ gestores|length }}</h4>
+                <small>Activos</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-mini stats-info">
+                <h4 class="mb-1">0</h4>
+                <small>Expedientes</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-mini stats-warning">
+                <h4 class="mb-1">0</h4>
+                <small>Pendientes</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <form method="GET" class="row align-items-end">
+            <div class="col-md-8 mb-3">
+                <label for="query" class="form-label">
+                    <i class="fas fa-search me-1"></i>Buscar Gestor
+                </label>
+                <input type="text" 
+                    class="form-control" 
+                    id="query" 
+                    name="query" 
+                    placeholder="Buscar por nombre, apellido, RUT o email..."
+                    value="{{ request.GET.query }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="d-grid gap-2 d-md-flex">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-1"></i>Buscar
+                    </button>
+                    <a href="{% url 'gestores' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Gestores List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card gestores-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Lista de Gestores
+                        {% if request.GET.query %}
+                            <small class="text-muted">({{ gestores|length }} resultado{{ gestores|length|pluralize }})</small>
+                        {% endif %}
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-filter me-1"></i>Filtrar
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-users me-2"></i>Todos</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-check-circle me-2"></i>Activos</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-pause-circle me-2"></i>Inactivos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0">
+                    {% if gestores %}
+                        <div class="list-group list-group-flush">
+                            {% for gestor in gestores %}
+                            <div class="list-group-item gestor-item d-flex align-items-center py-3">
+                                <!-- Avatar -->
+                                <div class="gestor-avatar me-3">
+                                    {{ gestor.nombre.0 }}{{ gestor.apellido.0 }}
+                                </div>
+                                
+                                <!-- Main Info -->
+                                <div class="flex-grow-1">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="gestor-info">
+                                                <h6 class="mb-1 fw-bold">
+                                                    {{ gestor.nombre }} {{ gestor.apellido }}
+                                                </h6>
+                                                <div class="gestor-details">
+                                                    <div class="d-flex flex-wrap gap-3">
+                                                        <span><i class="fas fa-id-card me-1"></i>{{ gestor.rut }}</span>
+                                                        <span><i class="fas fa-envelope me-1"></i>{{ gestor.email }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <span class="badge badge-activo">
+                                                        <i class="fas fa-check-circle me-1"></i>Activo
+                                                    </span>
+                                                    <span class="badge badge-expedientes ms-1">
+                                                        <i class="fas fa-folder me-1"></i>0 Expedientes
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="col-md-4">
+                                            <div class="gestor-actions justify-content-end">
+                                                <a href="{% url 'editar_gestor' gestor.id %}" 
+                                                class="btn btn-outline-warning btn-sm"
+                                                title="Editar Gestor">
+                                                    <i class="fas fa-edit me-1"></i>Editar
+                                                </a>
+                                                <!-- Button funcionando, solo tiene problemas con los caracteres especiales puede arreglarse con DOM y un addEventListener-->
+                                                <button onclick="confirmarEliminacion({{ gestor.id }}, '{{ gestor.nombre }} {{ gestor.apellido }}')"
+                                                        class="btn btn-outline-danger btn-sm"
+                                                        title="Eliminar Gestor">
+                                                    <i class="fas fa-trash me-1"></i>Eliminar
+                                                </button>
+                                                <div class="btn-group">
+                                                    <button type="button" 
+                                                            class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                                            data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li><a class="dropdown-item" href="#"><i class="fas fa-eye me-2"></i>Ver Detalles</a></li>
+                                                        <li><a class="dropdown-item" href="#"><i class="fas fa-folder me-2"></i>Ver Expedientes</a></li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li><a class="dropdown-item text-muted" href="#"><i class="fas fa-history me-2"></i>Ver Historial</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h5>No hay gestores registrados</h5>
+                            <p>
+                                {% if request.GET.query %}
+                                    No se encontraron resultados para "<strong>{{ request.GET.query }}</strong>"
+                                {% else %}
+                                    Comienza agregando tu primer gestor al sistema
+                                {% endif %}
+                            </p>
+                            <a href="{% url 'crear_gestor' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Crear Primer Gestor
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if gestores %}
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Mostrando {{ gestores|length }} gestor{{ gestores|length|pluralize }}
+                        </small>
+                        <div>
+                            <small class="text-muted">Página 1 de 1</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Token CSRF para SweetAlert2 -->
+{% csrf_token %}
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/confirmaEliminacion.js' %}"></script>
+{% endblock %}
