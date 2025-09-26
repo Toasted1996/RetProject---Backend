@@ -1,0 +1,451 @@
+/* ========================================
+   ESTILOS GLOBALES Y BASE
+   ======================================== */
+
+/* Variables CSS globales */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --warning-gradient: linear-gradient(135deg, #FFB75E 0%, #ED8F03 100%);
+    --danger-gradient: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%);
+    --info-gradient: linear-gradient(135deg, #3ca55c 0%, #b2fefa 100%);
+    
+    /* Colores adicionales */
+    --text-primary: #2d3748;
+    --text-secondary: #718096;
+    --bg-light: #f7fafc;
+    --border-light: #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+    
+    /* Transiciones */
+    --transition-fast: all 0.2s ease;
+    --transition-normal: all 0.3s ease;
+    --transition-slow: all 0.5s ease;
+}
+
+/* Reset y configuración global */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+/* ========================================
+   NAVBAR PERSONALIZADO
+   ======================================== */
+.navbar-custom {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-normal);
+}
+
+.navbar-custom .navbar-brand {
+    font-weight: 700;
+    color: var(--text-primary) !important;
+    transition: var(--transition-fast);
+}
+
+.navbar-custom .navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.navbar-custom .nav-link {
+    color: var(--text-primary) !important;
+    font-weight: 600;
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px;
+    transition: var(--transition-fast);
+    position: relative;
+}
+
+.navbar-custom .nav-link:hover {
+    background-color: rgba(102, 126, 234, 0.1);
+    color: #667eea !important;
+}
+
+.navbar-custom .nav-link.active {
+    background-color: rgba(102, 126, 234, 0.15);
+    color: #667eea !important;
+}
+
+/* Indicador activo en navbar */
+.navbar-custom .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 3px;
+    background: var(--primary-gradient);
+    border-radius: 2px;
+}
+
+/* Estilos para el toggler */
+.navbar-custom .navbar-toggler {
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: var(--transition-fast);
+}
+
+.navbar-custom .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.navbar-custom .navbar-toggler:hover {
+    background-color: rgba(102, 126, 234, 0.1);
+}
+
+/* ========================================
+   CARDS GLOBALES
+   ======================================== */
+.card-custom {
+    border: none;
+    border-radius: 15px;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-normal);
+    overflow: hidden;
+    background: white;
+}
+
+.card-custom:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-custom .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--border-light);
+    padding: 1.5rem;
+    font-weight: 600;
+}
+
+.card-custom .card-body {
+    padding: 1.5rem;
+}
+
+/* ========================================
+   BOTONES PERSONALIZADOS
+   ======================================== */
+.btn-custom {
+    border-radius: 10px;
+    padding: 12px 30px;
+    font-weight: 600;
+    transition: var(--transition-normal);
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-custom:active {
+    transform: translateY(0);
+}
+
+/* Botones con gradiente */
+.btn-primary.btn-custom {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.btn-success.btn-custom {
+    background: var(--success-gradient);
+    color: white;
+}
+
+.btn-warning.btn-custom {
+    background: var(--warning-gradient);
+    color: white;
+}
+
+.btn-danger.btn-custom {
+    background: var(--danger-gradient);
+    color: white;
+}
+
+.btn-info.btn-custom {
+    background: var(--info-gradient);
+    color: white;
+}
+
+/* Efecto ripple en botones */
+.btn-custom::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn-custom:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* ========================================
+   ELEMENTOS DE INTERFAZ
+   ======================================== */
+
+/* Iconos con estilo */
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: var(--transition-fast);
+}
+
+.stat-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Badges mejorados */
+.badge-custom {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+/* Timeline */
+.timeline-item {
+    position: relative;
+    padding-left: 3rem;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 40px;
+    bottom: -24px;
+    width: 2px;
+    background: var(--border-light);
+}
+
+.timeline-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    z-index: 1;
+}
+
+/* ========================================
+   UTILIDADES
+   ======================================== */
+
+/* Separadores decorativos */
+.divider-wave {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    overflow: hidden;
+    line-height: 0;
+}
+
+.divider-wave svg {
+    position: relative;
+    display: block;
+    width: calc(100% + 1.3px);
+    height: 60px;
+}
+
+.divider-wave .shape-fill {
+    fill: #FFFFFF;
+}
+
+/* Animaciones de entrada */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Clases de animación */
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-fade-in-left {
+    animation: fadeInLeft 0.6s ease-out forwards;
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablets */
+@media (max-width: 992px) {
+    .card-custom {
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-custom {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Móviles */
+@media (max-width: 768px) {
+    /* Mejoras para el navbar colapsible */
+    .navbar-custom .navbar-collapse {
+        background: rgba(255, 255, 255, 0.98);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-light);
+    }
+    
+    .navbar-custom .navbar-nav {
+        gap: 0.5rem;
+    }
+    
+    .navbar-custom .nav-link {
+        padding: 0.75rem 1rem !important;
+        border-radius: 8px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .navbar-custom .nav-link:hover {
+        background-color: rgba(102, 126, 234, 0.15);
+        transform: translateX(5px);
+    }
+    
+    /* Cards responsive */
+    .card-custom {
+        border-radius: 10px;
+        margin-bottom: 1rem;
+    }
+    
+    .card-custom .card-header,
+    .card-custom .card-body {
+        padding: 1rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .btn-custom {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Ajustes de padding para el contenido principal */
+    main {
+        padding-top: 80px !important;
+    }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+    /* Navbar más compacto */
+    .navbar-custom .navbar-brand {
+        font-size: 1.1rem;
+    }
+    
+    .navbar-custom .navbar-collapse {
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+    }
+    
+    .navbar-custom .nav-link {
+        padding: 0.6rem 0.8rem !important;
+        font-size: 0.9rem;
+    }
+    
+    /* Timeline responsive */
+    .timeline-item {
+        padding-left: 2rem;
+    }
+    
+    .timeline-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 0.65rem;
+    }
+    
+    .timeline-item:not(:last-child)::before {
+        left: 11px;
+    }
+    
+    /* Contenido principal con más padding */
+    main {
+        padding-top: 85px !important;
+    }
+}
+
+/* Estilos adicionales para el toggler en tablets */
+@media (max-width: 992px) {
+    .navbar-custom .navbar-toggler {
+        padding: 6px 10px;
+    }
+    
+    .navbar-custom .navbar-toggler-icon {
+        width: 1.2em;
+        height: 1.2em;
+    }
+}
