@@ -400,6 +400,138 @@ body {
     }
 }
 
+/* ========================================
+   MENSAJES DE DJANGO - ALERTAS PERSONALIZADAS
+   ======================================== */
+.alert {
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.alert::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    transition: var(--transition-fast);
+}
+
+.alert:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Alert Success - Verde */
+.alert-success {
+    background-color: #d1f2eb;
+    color: #0f6848;
+    border-left: 4px solid #28a745;
+}
+
+.alert-success::before {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.alert-success .btn-close {
+    filter: invert(0.5) sepia(1) saturate(5) hue-rotate(86deg);
+}
+
+/* Alert Danger - Rojo */
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-danger::before {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.alert-danger .btn-close {
+    filter: invert(0.5) sepia(1) saturate(5) hue-rotate(-45deg);
+}
+
+/* Alert Warning - Amarillo */
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-warning::before {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+}
+
+/* Alert Info - Azul */
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-info::before {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+}
+
+/* Iconos en alertas */
+.alert i {
+    font-size: 1.1rem;
+    margin-right: 8px;
+}
+
+/* Animación de entrada para alertas */
+.alert.fade.show {
+    animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Botón de cerrar personalizado */
+.alert .btn-close {
+    padding: 0.5rem;
+    margin: -0.5rem -0.5rem -0.5rem auto;
+    background-size: 1.2em;
+    border-radius: 50%;
+    transition: var(--transition-fast);
+    opacity: 0.7;
+}
+
+.alert .btn-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Responsividad para mensajes */
+@media (max-width: 768px) {
+    .alert {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .alert i {
+        font-size: 1rem;
+    }
+}
+
 /* Móviles pequeños */
 @media (max-width: 480px) {
     /* Navbar más compacto */
