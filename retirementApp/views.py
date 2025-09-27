@@ -1,7 +1,15 @@
+#Importamos render, redirect y get_object_or_404 para manejo de vistas (renderizacion, redirigir y buscar objetos)
 from django.shortcuts import render, redirect, get_object_or_404
+#Importamos messages para mensajes flash
 from django.contrib import messages
+#Importamos los modelos a usar
 from .models import Gestor
-from retirementApp.forms import GestorForm
+#Importamos los formularios a usar
+from retirementApp.forms import GestorForm, CustomLoginForm, CustomUserCreationForm
+#Importamos autenticacion, login y logout
+from django.contrib.auth import authenticate, login, logout
+#Importamos login_required para proteger vistas y user_passes_test para permisos(se asegura que sea admin)
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
 
 # Create your views here.
@@ -11,6 +19,81 @@ def inicio(request):
 
                     #** CRUD GESTORES **#
 #We're usign function based views for simplicity
+
+
+#views para LOGIN y REGISTRO
+def custom_login(request):
+    #Si el usuario ya esta autenticado, redirige al inicio
+    if request.user.is_authenticated:
+        return redirect('inicio')
+    #Si el metodo es POST, procesa el formulario para LOGIN
+    if request.method == 'POST':
+        form = CustomLoginForm(request, data = request.POST)
+        #Verifica que el formulario sea valido
+        if form.is_valid():
+            #Trae los datos limpios del formulario
+            username= form.cleaned_data.get('username')
+            password= form.cleaned_data.get('password')
+            #Autentica al usuario, comprobando credenciales
+            user = authenticate(username=username, password=password)
+            
+            #Si el usuario es valido, lo loguea
+            if user is not None:
+                #Inicia sesion
+                login(request, user)
+                messages.success(request, 'Bienvenido/a de nuevo!') #Mensaje de exito
+                #Redirigir segun su rol
+                if user.groups.filter(name='Admin').exists():
+                    return redirect('inicio')
+                else:
+                    return redirect('gestores')
+            else: #Si no es valido, arrojara error
+                messages.error(request, 'Usuario o contraseña incorrectos')
+        else:
+            messages.error(request, 'Corrija los datos ingresados')
+    else:#Si no es POST, muestra el formulario vacio no autenticado
+        form = CustomLoginForm()
+    #Renderiza el formulario de login
+    return render(request, 'auth/login.html', {'form': form, 'title':'Iniciar Sesión'})
+
+
+#Views para LOGOUT
+def custom_logout(request):
+    #Si el request es de un usuario autenticado, obtiene su nombre, sino usa 'Usuario'
+    name = request.user.nombre if request.user.is_authenticated else 'Usuario'
+    logout(request)
+    #Mensaje de exito
+    messages.success(request, f'Nos vemos a la vuelta {name}!')
+    return redirect('login')
+
+
+# VISTA AUTENTICADA PARA ADMINs #
+@login_required(login_url='login')
+@user_passes_test(lambda u: u.groups.filter(name='Admin').exists())
+def register_user(request):
+    #Esta es la vista para un Admin autenticado, podra crear nuevos usuarios
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save_user()#Guardamos el usuario con el metodo customizado
+            messages.success(request, 'Usuario creado con exito')
+            return redirect('login') #Redirige a login
+        else:
+            messages.error(request, 'Corrija los errores en el formulario')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'auth/register.html', {'form': form, 'title':'Registrar Usuario'})
+
+#Verifica si el usuario es admin
+def is_admin(user):
+    #Verifica que el usuario pertenezca al grupo Admin 
+    return user.groups.filter(name='Admin').exists()
+    
+
+#Verifica si es gestor
+def is_gestor(user):
+    return user.groups.filter(name='Gestor').exists()
+
 
 #Vista para crear un gestor
 def crearGestor(request):
@@ -52,6 +135,7 @@ def listaGestores(request):
     }
     return render(request, 'gestores/gestores.html', data)
 
+#view para editar un gestor
 def editarGestor(request, id):
     #buscamos gestor por id
     gestor = get_object_or_404(Gestor, id=id)
