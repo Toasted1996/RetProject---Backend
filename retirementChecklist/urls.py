@@ -7,8 +7,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # Rutas de la app principal
     path('', include('retirementApp.urls')),
-    # Rutas de autenticacion integrada en Django
-    path('accounts/', include('django.contrib.auth.urls'))
+    # # Rutas de autenticacion integrada en Django
+    # path('accounts/', include('django.contrib.auth.urls'))
 ]
 
 # Configuración para archivos estáticos (CSS, JS, imágenes del proyecto)

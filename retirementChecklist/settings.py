@@ -147,3 +147,8 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR: 'danger',
 }
+
+# Configuración de URLs de autenticación
+LOGIN_URL = '/login/'          # URL completa del login
+LOGIN_REDIRECT_URL = '/gestores/'     # Después del login va a gestores  
+LOGOUT_REDIRECT_URL = '/'             # Después del logout va al inicio (Hero)

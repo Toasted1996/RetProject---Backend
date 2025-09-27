@@ -28,26 +28,53 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark fw-semibold" href="{% url 'inicio' %}">
-                            <i class="fas fa-home me-2"></i>Inicio
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark fw-semibold" href="{% url 'gestores' %}">
-                            <i class="fas fa-users me-2"></i>Gestores
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark fw-semibold" href="#">
-                            <i class="fas fa-folder me-2"></i>Expedientes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark fw-semibold" href="#">
-                            <i class="fas fa-clipboard-check me-2"></i>Auditorias
-                        </a>
-                    </li>
+                    {% if user.is_authenticated %}
+                        <!-- NAVBAR PARA USUARIOS AUTENTICADOS -->
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="{% url 'gestores' %}">
+                                <i class="fas fa-users me-2"></i>Gestores
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="#">
+                                <i class="fas fa-folder me-2"></i>Expedientes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="#">
+                                <i class="fas fa-clipboard-check me-2"></i>Auditorías
+                            </a>
+                        </li>
+                        <!-- DROPDOWN USUARIO -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark fw-semibold" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-2"></i>{{ user.first_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if user.is_staff or user.is_superuser %}
+                                    <li><a class="dropdown-item" href="{% url 'register' %}">
+                                        <i class="fas fa-user-plus me-2"></i>Crear Usuario
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- NAVBAR PARA USUARIOS NO AUTENTICADOS -->
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="{% url 'inicio' %}">
+                                <i class="fas fa-home me-2"></i>Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

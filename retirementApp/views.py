@@ -14,12 +14,23 @@ from django.db.models import Q
 
 # Create your views here.
 
+#Verifica si el usuario es admin
+def es_admin(user):
+    #Verifica que el usuario pertenezca al grupo Administrador
+    return user.groups.filter(name='Administrador').exists()
+    
+
+#Verifica si es gestor
+def es_gestor(user):
+    return user.groups.filter(name='Gestor').exists()
+
+
+
 def inicio(request):
     return render(request, 'index.html')
 
                     #** CRUD GESTORES **#
 #We're usign function based views for simplicity
-
 
 #views para LOGIN y REGISTRO
 def custom_login(request):
@@ -60,16 +71,16 @@ def custom_login(request):
 #Views para LOGOUT
 def custom_logout(request):
     #Si el request es de un usuario autenticado, obtiene su nombre, sino usa 'Usuario'
-    name = request.user.nombre if request.user.is_authenticated else 'Usuario'
+    name = request.user.first_name if request.user.is_authenticated and request.user.first_name else 'Usuario'
     logout(request)
     #Mensaje de exito
-    messages.success(request, f'Nos vemos a la vuelta {name}!')
-    return redirect('login')
+    messages.success(request, f'¡Nos vemos a la vuelta {name}!')
+    return redirect('inicio')  #Redirige a inicio
 
 
 # VISTA AUTENTICADA PARA ADMINs #
 @login_required(login_url='login')
-@user_passes_test(lambda u: u.groups.filter(name='Admin').exists())
+@user_passes_test(lambda u: u.groups.filter(name='Administrador').exists())
 def register_user(request):
     #Esta es la vista para un Admin autenticado, podra crear nuevos usuarios
     if request.method == 'POST':
@@ -84,18 +95,10 @@ def register_user(request):
         form = CustomUserCreationForm()
     return render(request, 'auth/register.html', {'form': form, 'title':'Registrar Usuario'})
 
-#Verifica si el usuario es admin
-def is_admin(user):
-    #Verifica que el usuario pertenezca al grupo Admin 
-    return user.groups.filter(name='Admin').exists()
-    
-
-#Verifica si es gestor
-def is_gestor(user):
-    return user.groups.filter(name='Gestor').exists()
-
 
 #Vista para crear un gestor
+@login_required(login_url='login') # Protege la vista, solo usuarios autenticados pueden acceder
+@user_passes_test(es_admin) #Solo el administrador puede crear gestores
 def crearGestor(request):
     if request.method == 'POST':
         #Procesa formulario
@@ -118,6 +121,7 @@ def crearGestor(request):
     #renderizamos el template con los datos
     return render(request, 'gestores/createGestor.html', data)
 
+@login_required(login_url= 'login')
 #view para lista todos los gestores con filtro y busqueda
 def listaGestores(request):
     gestores = Gestor.objects.all()
@@ -135,6 +139,8 @@ def listaGestores(request):
     }
     return render(request, 'gestores/gestores.html', data)
 
+@login_required(login_url = 'login')
+@user_passes_test(es_admin)
 #view para editar un gestor
 def editarGestor(request, id):
     #buscamos gestor por id
@@ -159,6 +165,9 @@ def editarGestor(request, id):
     }
     return render(request, 'gestores/createGestor.html', data)
 
+
+@login_required(login_url='login')
+@user_passes_test(es_admin)
 #vista para eliminar un gestor
 def eliminarGestor(request, id):
     #Buscamos el gestor por id
