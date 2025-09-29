@@ -3,9 +3,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 #Importamos messages para mensajes flash
 from django.contrib import messages
 #Importamos los modelos a usar
-from .models import Gestor
+from .models import Gestor, Expediente
 #Importamos los formularios a usar
-from retirementApp.forms import GestorForm, CustomLoginForm, CustomUserCreationForm
+from retirementApp.forms import GestorForm,ExpedienteForm, CustomLoginForm, CustomUserCreationForm
 #Importamos autenticacion, login y logout
 from django.contrib.auth import authenticate, login, logout
 #Importamos el modelo User
@@ -102,7 +102,6 @@ def register_user(request):
         form = CustomUserCreationForm()
     return render(request, 'auth/register.html', {'form': form, 'title':'Registrar Usuario'})
 
-
 #Vista para crear un gestor
 @login_required(login_url='login') # Protege la vista, solo usuarios autenticados pueden acceder
 @user_passes_test(es_admin) #Solo el administrador puede crear gestores
@@ -120,9 +119,10 @@ def crearGestor(request):
                 user = User.objects.create_user(
                 username=f"{gestor.nombre.lower()}.{gestor.apellido.lower()}",
                 email=gestor.email,
-                password= "temporal123" #asigna contraseña temporal
+                password= "temporal123", #asigna contraseña temporal
+                first_name= gestor.nombre,
+                last_name= gestor.apellido
                 )
-
                 #Asociamos el usuario a gestor
                 grupo_gestor = Group.objects.get(name='Gestor')
                 user.groups.add(grupo_gestor)
@@ -226,3 +226,74 @@ def eliminarGestor(request, id):
     
     # Si no es POST, redirigir a gestores
     return redirect('gestores')
+
+
+
+
+#* CRUD EXPEDIENTES *#
+
+@login_required(login_url='login')
+def listaExpedientes(request):
+    #Si es admin, ve todos los expedientes, si es gestor solo vera los suyos
+    if es_admin(request.user):
+        expedientes = Expediente.objects.all().select_related('gestor')
+        titulo = 'Expedientes'
+        create = True
+    
+    elif es_gestor(request.user):
+        try:
+            #Buscara solo los expedientes del gestor logueado
+            gestor = Gestor.objects.get(
+                nombre = request.user.first_name,
+                apellido = request.user.last_name
+            )
+            expedientes = Expediente.objects.filter(gestor=gestor)
+            titulo = 'Mis Expedientes'
+            create = False
+        except Gestor.DoesNotExist:
+            expedientes = Expediente.objects.none()
+            messages.error(request, 'No se encontró el gestor asociado a su cuenta. Contacte a su Manager.')
+    else:#Sin rol asociado
+        messages.error(request, 'No cuenta con permiso para ver expedientes. Contacte a su Manager.')
+    
+    #Filtro para busqueda de expedientes
+    query = request.GET.get('query', '').strip()
+    if query:
+        #Puede filtar por varios campos, incluyendo campos de gestor asociado
+        expedientes =expedientes.filter(
+            Q(titulo__icontains=query) | Q(tipo_pension__icontains=query) | Q(estado_expediente__icontains=query) | Q(gestor__nombre__icontains=query) | Q(gestor__apellido__icontains=query)
+        )
+    #Se arman los datos para el template    
+    data = {
+        'expedientes' : expedientes,
+        'titulo' : titulo,
+        'create' : create,
+        'query' : query
+    }
+    return render(request, 'expedientes/expedientes.html', data)
+
+
+@login_required(login_url='login')
+@user_passes_test(es_admin)
+def crearExpediente(request):
+    """Vista para crear expediente - Solo administradores"""
+    
+    if request.method == 'POST':
+        form = ExpedienteForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                expediente = form.save()
+                messages.success(request, f'Expediente "{expediente.titulo}" creado exitosamente')
+                return redirect('expedientes')
+            except Exception as error:
+                messages.error(request, f'Error al crear expediente: {error}')
+        else:
+            messages.error(request, 'Corrija los errores en el formulario')
+    else:
+        form = ExpedienteForm()
+        
+    data = {
+        'titulo': 'Crear Expediente',
+        'form': form
+    }
+    return render(request, 'expedientes/createExpediente.html', data)

@@ -1,5 +1,5 @@
 #importaremos timezone para validar fechas
-from datetime import timezone
+from datetime import datetime, timedelta, date, timezone
 #Importamos forms de django
 from django import forms
 #Importamos modelos y fomularios de autenticacion para LOGIN y REGISTRO
@@ -50,24 +50,120 @@ class GestorForm(forms.ModelForm):
 
 #Formulario Expediente
 class ExpedienteForm(forms.ModelForm):
+    # AGREGAR: Campo para extender plazo
+    extender_plazo = forms.BooleanField(
+        required=False,
+        label='Extender plazo 30 días más',
+        help_text='Marque para dar 30 días adicionales si el expediente está vencido',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    
     class Meta:
         model = Expediente
-        fields = '__all__'
+        fields = [
+            'titulo',
+            'tipo_pension',
+            'fecha_vencimiento',
+            'documentos',
+            'estado_expediente',
+            'gestor'
+        ]
+        
         widgets = {
-            'titulo': forms.TextInput(attrs={'class':'form-control', 'placeholder':'Ingrese titulo'}),
-            'tipo_pension': forms.TextInput(attrs={'class':'form-control', 'placeholder':'Ingrese tipo de pension'}),
-            'fecha_vencimiento': forms.DateInput(attrs={'class':'form-control', 'type':'date'}),
-            'documentos': forms.ClearableFileInput(attrs={'class':'form-control'}),
-            'estado_expediente': forms.Select(attrs={'class':'form-control'}),
-            'gestor': forms.Select(attrs={'class':'form-control'})
+            'titulo': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ingrese título del expediente'
+            }),
+            'tipo_pension': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ej: Pensión de vejez, invalidez, etc.'
+            }),
+            'fecha_vencimiento': forms.DateInput(attrs={
+                'class': 'form-control', 
+                'type': 'date'
+            }),
+            'documentos': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.doc,.docx,.jpg,.png'
+            }),
+            'estado_expediente': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'gestor': forms.Select(attrs={
+                'class': 'form-select'
+            })
         }
         
-        #Validacion para que fecha de vencimiento sea > a fecha actual
-    def clean_fecha_vencimiento(self):
-        fecha_vencimiento = self.cleaned_data.get('fecha_vencimiento')
-        if fecha_vencimiento and fecha_vencimiento <= timezone.now().date():
-            raise forms.ValidationError('La fecha de vencimiento debe ser futura')
-        return fecha_vencimiento
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # LÓGICA MEJORADA PARA FECHAS
+        if not self.instance.pk:
+            # EXPEDIENTE NUEVO: fecha_inicio + 30 días
+            fecha_default = date.today() + timedelta(days=30)
+            self.fields['fecha_vencimiento'].initial = fecha_default
+            # No mostrar opción de extender en expedientes nuevos
+            self.fields['extender_plazo'].widget = forms.HiddenInput()
+            
+        else:
+            # EXPEDIENTE EXISTENTE: verificar si está vencido
+            fecha_actual = date.today()
+            if self.instance.fecha_vencimiento <= fecha_actual:
+                # Expediente vencido - mostrar opción de extender
+                self.fields['extender_plazo'].widget.attrs.update({
+                    'class': 'form-check-input',
+                    'style': 'margin-top: 0.25rem;'
+                })
+                # Agregar mensaje informativo
+                dias_vencido = (fecha_actual - self.instance.fecha_vencimiento).days
+                self.fields['extender_plazo'].help_text = f'Expediente vencido hace {dias_vencido} días. Marque para extender 30 días más.'
+            else:
+                # Expediente vigente - ocultar opción de extender
+                self.fields['extender_plazo'].widget = forms.HiddenInput()
+        
+        # Etiquetas en español
+        self.fields['titulo'].label = 'Título del Expediente'
+        self.fields['tipo_pension'].label = 'Tipo de Pensión'
+        self.fields['fecha_vencimiento'].label = 'Fecha de Vencimiento'
+        self.fields['documentos'].label = 'Documentos'
+        self.fields['estado_expediente'].label = 'Estado del Expediente'
+        self.fields['gestor'].label = 'Gestor Asignado'
+        
+        # Ordenar gestores
+        self.fields['gestor'].queryset = Gestor.objects.all().order_by('nombre', 'apellido')
+    
+    # VALIDACIÓN ÚNICA Y MEJORADA
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha_vencimiento = cleaned_data.get('fecha_vencimiento')
+        extender_plazo = cleaned_data.get('extender_plazo')
+        
+        # Si se marcó extender plazo
+        if extender_plazo and self.instance.pk:
+            # Calcular nueva fecha desde la fecha actual + 30 días
+            nueva_fecha = date.today() + timedelta(days=30)
+            cleaned_data['fecha_vencimiento'] = nueva_fecha
+            
+        # Validar que la fecha no sea pasada (solo para expedientes nuevos)
+        elif fecha_vencimiento and not self.instance.pk:
+            if fecha_vencimiento <= date.today():
+                raise forms.ValidationError({
+                    'fecha_vencimiento': 'La fecha de vencimiento debe ser futura'
+                })
+        
+        return cleaned_data
+
+    def save(self, commit=True):
+        """Override save para manejar la extensión de plazo"""
+        instance = super().save(commit=False)
+        
+        # Si se marcó extender plazo, actualizar la fecha
+        if self.cleaned_data.get('extender_plazo') and self.instance.pk:
+            instance.fecha_vencimiento = date.today() + timedelta(days=30)
+            
+        if commit:
+            instance.save()
+        return instance
 
 
 #Formulario integrado para LOGIN customizado usando AuthenticationForm        
