@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Sistema de Auditorías{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/expedientes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+                    <p class="mb-0 text-muted">
+                        {% if create %}
+                            Gestione todos los expedientes del sistema
+                        {% else %}
+                            Revise sus expedientes asignados y su estado
+                        {% endif %}
+                    </p>
+                </div>
+                
+                {% if create %}
+                <div class="btn-toolbar" role="toolbar">
+                    <a href="{% url 'crear_expediente' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nuevo Expediente
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                    class="form-control" 
+                                    name="query" 
+                                    value="{{ query }}" 
+                                    placeholder="Buscar por título, tipo de pensión, o gestor...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-outline-primary flex-fill">
+                                    <i class="fas fa-search me-1"></i>Buscar
+                                </button>
+                                <a href="{% url 'expedientes' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <small class="text-muted">
+                    {% if query %}
+                        Mostrando resultados para "<strong>{{ query }}</strong>" - 
+                    {% endif %}
+                    <strong>{{ expedientes.count }}</strong> expediente{{ expedientes.count|pluralize }}
+                </small>
+                
+                {% if expedientes.count > 0 %}
+                <div class="d-flex gap-2">
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle me-1"></i>Activos: 
+                        {{ expedientes|length }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Expedientes Table/Cards -->
+            {% if expedientes.count > 0 %}
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-folder me-2"></i>Expediente
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar me-2"></i>Fechas
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-user me-2"></i>Gestor
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-info-circle me-2"></i>Estado
+                                    </th>
+                                    <th scope="col" class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expediente in expedientes %}
+                                <tr class="expediente-row">
+                                    <td>
+                                        <div class="d-flex align-items-start">
+                                            <div class="me-3">
+                                                <div class="expediente-icon">
+                                                    <i class="fas fa-file-alt"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 fw-semibold">{{ expediente.titulo }}</h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-tag me-1"></i>{{ expediente.tipo_pension }}
+                                                </small>
+                                                {% if expediente.documentos %}
+                                                <br><small class="text-info">
+                                                    <i class="fas fa-paperclip me-1"></i>Con documentos
+                                                </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        <div class="fecha-info">
+                                            <small class="d-block">
+                                                <strong>Inicio:</strong> {{ expediente.fecha_inicio|date:"d/m/Y" }}
+                                            </small>
+                                            <small class="d-block {% if expediente.fecha_vencimiento <= today %}text-danger{% else %}text-muted{% endif %}">
+                                                <strong>Vence:</strong> {{ expediente.fecha_vencimiento|date:"d/m/Y" }}
+                                                {% if expediente.fecha_vencimiento <= today %}
+                                                <i class="fas fa-exclamation-triangle ms-1"></i>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="gestor-avatar me-2">
+                                                {{ expediente.gestor.nombre|first }}{{ expediente.gestor.apellido|first }}
+                                            </div>
+                                            <div>
+                                                <small class="fw-semibold d-block">{{ expediente.gestor.nombre }} {{ expediente.gestor.apellido }}</small>
+                                                <small class="text-muted">{{ expediente.gestor.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        {% if expediente.estado_expediente == 'activo' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Activo
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-pause-circle me-1"></i>Inactivo
+                                        </span>
+                                        {% endif %}
+                                        
+                                        {% if expediente.fecha_vencimiento <= today %}
+                                        <br><span class="badge bg-danger mt-1">
+                                            <i class="fas fa-clock me-1"></i>Vencido
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td>
+                                        <div class="btn-group-vertical btn-group-sm" role="group">
+                                            <!-- Ver Detalle - Todos pueden ver -->
+                                            <a href="{% url 'detalle_expediente' expediente.id %}" 
+                                            class="btn btn-outline-info btn-sm" 
+                                            title="Ver Detalle">
+                                                <i class="fas fa-eye me-1"></i>Ver Detalle
+                                            </a>
+                                            
+                                            {% if puede_crear %}
+                                            <!-- Editar - Solo Administradores -->
+                                            <a href="{% url 'editar_expediente' expediente.id %}" 
+                                            class="btn btn-outline-warning btn-sm" 
+                                            title="Editar Expediente">
+                                                <i class="fas fa-edit me-1"></i>Editar
+                                            </a>
+                                            
+                                            <!-- Eliminar - Solo Administradores -->
+                                            <button onclick="confirmarEliminacionExpediente({{ expediente.id }}, '{{ expediente.titulo|escapejs }}')"
+                                                    class="btn btn-outline-danger btn-sm"
+                                                    title="Eliminar Expediente">
+                                                <i class="fas fa-trash me-1"></i>Eliminar
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            {% else %}
+            <!-- Empty State -->
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">
+                            {% if query %}
+                                No se encontraron expedientes
+                            {% else %}
+                                No hay expedientes disponibles
+                            {% endif %}
+                        </h4>
+                        <p class="text-muted mb-4">
+                            {% if query %}
+                                Intente con otros términos de búsqueda
+                            {% elif puede_crear %}
+                                Comience creando su primer expediente
+                            {% else %}
+                                No tiene expedientes asignados en este momento
+                            {% endif %}
+                        </p>
+                        
+                        {% if puede_crear and not query %}
+                        <a href="{% url 'crear_expediente' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Crear Primer Expediente
+                        </a>
+                        {% endif %}
+                        
+                        {% if query %}
+                        <a href="{% url 'expedientes' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Ver Todos
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Token CSRF para JavaScript -->
+{% csrf_token %}
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/expedientes.js' %}"></script>
+{% endblock %}

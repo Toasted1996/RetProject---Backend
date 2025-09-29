@@ -1,0 +1,211 @@
+/* ===== VARIABLES CSS ===== */
+:root {
+    --primary-color: #4e73df;
+    --success-color: #1cc88a;
+    --warning-color: #f6c23e;
+    --danger-color: #e74a3b;
+    --info-color: #36b9cc;
+    --light-color: #f8f9fc;
+    --dark-color: #5a5c69;
+    --border-color: #e3e6f0;
+    --shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+/* ===== LAYOUT EXPEDIENTES ===== */
+.expediente-row {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.expediente-row:hover {
+    background-color: var(--light-color);
+    border-left-color: var(--primary-color);
+    transform: translateX(2px);
+}
+
+/* ===== ICONOS Y AVATARES ===== */
+.expediente-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: var(--shadow);
+}
+
+.gestor-avatar {
+    width: 35px;
+    height: 35px;
+    background: linear-gradient(135deg, var(--success-color), #20c9a6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+}
+
+/* ===== INFORMACIÓN DE FECHAS ===== */
+.fecha-info {
+    min-width: 120px;
+}
+
+.fecha-info small {
+    line-height: 1.4;
+}
+
+/* ===== BADGES Y ESTADOS ===== */
+.badge {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.35rem;
+}
+
+.badge i {
+    font-size: 0.75em;
+}
+
+/* ===== BOTONES DE ACCIÓN ===== */
+.btn-group-vertical .btn {
+    border-radius: 0.25rem !important;
+    margin-bottom: 0.25rem;
+    min-width: 100px;
+}
+
+.btn-group-vertical .btn:last-child {
+    margin-bottom: 0;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+/* ===== FORMULARIO ===== */
+.form-label.required::after {
+    content: " *";
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+    padding: 3rem 1rem;
+}
+
+.empty-state i {
+    opacity: 0.5;
+}
+
+/* ===== CARDS ===== */
+.card {
+    border: none;
+    box-shadow: var(--shadow);
+    border-radius: 0.35rem;
+}
+
+.card-header {
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), #224abe) !important;
+}
+
+/* ===== SEARCH BAR ===== */
+.input-group-text {
+    background-color: var(--light-color);
+    border-color: var(--border-color);
+    color: var(--dark-color);
+}
+
+/* ===== ALERTAS ===== */
+.alert {
+    border: none;
+    border-radius: 0.35rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-left: 4px solid var(--warning-color);
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-left: 4px solid var(--info-color);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .btn-group-vertical {
+        flex-direction: row !important;
+    }
+    
+    .btn-group-vertical .btn {
+        margin-bottom: 0;
+        margin-right: 0.25rem;
+        min-width: auto;
+        flex: 1;
+    }
+    
+    .btn-group-vertical .btn:last-child {
+        margin-right: 0;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .gestor-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.7rem;
+    }
+    
+    .expediente-icon {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.expediente-row {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* ===== HOVER EFFECTS ===== */
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2);
+    transition: all 0.3s ease;
+}

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} - Sistema de Auditorías{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/expedientes.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">{{ titulo }}</h1>
+                    <p class="mb-0 text-muted">Complete la información del expediente</p>
+                </div>
+                <a href="{% url 'expedientes' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>{{ titulo }}
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <!-- Título del Expediente -->
+                            <div class="col-12">
+                                <label for="{{ form.titulo.id_for_label }}" class="form-label required">
+                                    <i class="fas fa-heading me-2"></i>{{ form.titulo.label }}
+                                </label>
+                                {{ form.titulo }}
+                                {% if form.titulo.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.titulo.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Ingrese un título descriptivo para el expediente
+                                </small>
+                            </div>
+
+                            <!-- Tipo de Pensión -->
+                            <div class="col-md-6">
+                                <label for="{{ form.tipo_pension.id_for_label }}" class="form-label required">
+                                    <i class="fas fa-tag me-2"></i>{{ form.tipo_pension.label }}
+                                </label>
+                                {{ form.tipo_pension }}
+                                {% if form.tipo_pension.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.tipo_pension.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Gestor Asignado -->
+                            <div class="col-md-6">
+                                <label for="{{ form.gestor.id_for_label }}" class="form-label required">
+                                    <i class="fas fa-user me-2"></i>{{ form.gestor.label }}
+                                </label>
+                                {{ form.gestor }}
+                                {% if form.gestor.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.gestor.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Fecha de Vencimiento -->
+                            <div class="col-md-6">
+                                <label for="{{ form.fecha_vencimiento.id_for_label }}" class="form-label required">
+                                    <i class="fas fa-calendar me-2"></i>{{ form.fecha_vencimiento.label }}
+                                </label>
+                                {{ form.fecha_vencimiento }}
+                                {% if form.fecha_vencimiento.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.fecha_vencimiento.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Por defecto se establece 30 días desde la fecha de creación
+                                </small>
+                            </div>
+
+                            <!-- Estado del Expediente -->
+                            <div class="col-md-6">
+                                <label for="{{ form.estado_expediente.id_for_label }}" class="form-label required">
+                                    <i class="fas fa-info-circle me-2"></i>{{ form.estado_expediente.label }}
+                                </label>
+                                {{ form.estado_expediente }}
+                                {% if form.estado_expediente.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.estado_expediente.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Extender Plazo (Solo si está vencido) -->
+                            {% if form.extender_plazo.field.widget.input_type != 'hidden' %}
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <div class="form-check">
+                                        {{ form.extender_plazo }}
+                                        <label for="{{ form.extender_plazo.id_for_label }}" class="form-check-label">
+                                            <i class="fas fa-clock me-2"></i>{{ form.extender_plazo.label }}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted mt-2">
+                                        {{ form.extender_plazo.help_text }}
+                                    </small>
+                                </div>
+                            </div>
+                            {% else %}
+                            {{ form.extender_plazo }}
+                            {% endif %}
+
+                            <!-- Documentos -->
+                            <div class="col-12">
+                                <label for="{{ form.documentos.id_for_label }}" class="form-label">
+                                    <i class="fas fa-paperclip me-2"></i>{{ form.documentos.label }}
+                                </label>
+                                {{ form.documentos }}
+                                {% if form.documentos.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.documentos.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Formatos permitidos: PDF, DOC, DOCX, JPG, PNG
+                                </small>
+                                
+                                {% if expediente.documentos %}
+                                <div class="mt-2">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-file me-2"></i>
+                                        Archivo actual: 
+                                        <a href="{{ expediente.documentos.url }}" target="_blank" class="alert-link">
+                                            {{ expediente.documentos.name|default:"Ver archivo" }}
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'expedientes' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancelar
+                                    </a>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button type="reset" class="btn btn-outline-warning">
+                                            <i class="fas fa-undo me-2"></i>Limpiar
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save me-2"></i>
+                                            {% if expediente %}Actualizar{% else %}Crear{% endif %} Expediente
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/expedientes.js' %}"></script>
+{% endblock %}
