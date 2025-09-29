@@ -1,54 +1,62 @@
-/* ===== VARIABLES CSS ===== */
-:root {
-    --primary-color: #4e73df;
-    --success-color: #1cc88a;
-    --warning-color: #f6c23e;
-    --danger-color: #e74a3b;
-    --info-color: #36b9cc;
-    --light-color: #f8f9fc;
-    --dark-color: #5a5c69;
-    --border-color: #e3e6f0;
-    --shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+/* ===== ESTILOS BASE EXPEDIENTES ===== */
+.expediente-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e3e6f0;
 }
 
-/* ===== LAYOUT EXPEDIENTES ===== */
+.expediente-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    border-color: #5a5c69;
+}
+
 .expediente-row {
-    transition: all 0.3s ease;
-    border-left: 4px solid transparent;
+    transition: background-color 0.2s ease;
 }
 
 .expediente-row:hover {
-    background-color: var(--light-color);
-    border-left-color: var(--primary-color);
-    transform: translateX(2px);
+    background-color: #f8f9fa !important;
 }
 
 /* ===== ICONOS Y AVATARES ===== */
 .expediente-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
-    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    box-shadow: var(--shadow);
+    background: rgba(78, 115, 223, 0.1);
+    border-radius: 50%;
 }
 
 .gestor-avatar {
     width: 35px;
     height: 35px;
-    background: linear-gradient(135deg, var(--success-color), #20c9a6);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+    font-size: 12px;
+    font-weight: 600;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ===== BADGES Y ESTADOS ===== */
+.badge-vencido {
+    animation: pulse-danger 2s infinite;
+}
+
+.badge-proximo {
+    animation: pulse-warning 3s infinite;
+}
+
+@keyframes pulse-danger {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+@keyframes pulse-warning {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
 }
 
 /* ===== INFORMACIÓN DE FECHAS ===== */
@@ -56,156 +64,348 @@
     min-width: 120px;
 }
 
-.fecha-info small {
-    line-height: 1.4;
+.fecha-vencimiento {
+    position: relative;
 }
 
-/* ===== BADGES Y ESTADOS ===== */
-.badge {
-    font-size: 0.7rem;
-    padding: 0.35rem 0.65rem;
-    border-radius: 0.35rem;
+.fecha-vencimiento.vencido::before {
+    content: '🔥';
+    position: absolute;
+    left: -20px;
+    animation: shake 1s infinite;
 }
 
-.badge i {
-    font-size: 0.75em;
-}
-
-/* ===== BOTONES DE ACCIÓN ===== */
-.btn-group-vertical .btn {
-    border-radius: 0.25rem !important;
-    margin-bottom: 0.25rem;
-    min-width: 100px;
-}
-
-.btn-group-vertical .btn:last-child {
-    margin-bottom: 0;
-}
-
-.btn-sm {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-}
-
-/* ===== FORMULARIO ===== */
-.form-label.required::after {
-    content: " *";
-    color: var(--danger-color);
-    font-weight: bold;
-}
-
-.form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-}
-
-.form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-}
-
-/* ===== EMPTY STATE ===== */
-.empty-state {
-    padding: 3rem 1rem;
-}
-
-.empty-state i {
-    opacity: 0.5;
-}
-
-/* ===== CARDS ===== */
-.card {
-    border: none;
-    box-shadow: var(--shadow);
-    border-radius: 0.35rem;
-}
-
-.card-header {
-    border-bottom: 1px solid var(--border-color);
-    background: linear-gradient(135deg, var(--primary-color), #224abe) !important;
-}
-
-/* ===== SEARCH BAR ===== */
-.input-group-text {
-    background-color: var(--light-color);
-    border-color: var(--border-color);
-    color: var(--dark-color);
-}
-
-/* ===== ALERTAS ===== */
-.alert {
-    border: none;
-    border-radius: 0.35rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    border-left: 4px solid var(--warning-color);
-}
-
-.alert-info {
-    background-color: #d1ecf1;
-    border-left: 4px solid var(--info-color);
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-    .btn-group-vertical {
-        flex-direction: row !important;
+    .expediente-card {
+        margin-bottom: 1rem;
     }
     
-    .btn-group-vertical .btn {
-        margin-bottom: 0;
-        margin-right: 0.25rem;
-        min-width: auto;
-        flex: 1;
+    .btn-group {
+        flex-direction: column;
     }
     
-    .btn-group-vertical .btn:last-child {
-        margin-right: 0;
-    }
-    
-    .table-responsive {
-        font-size: 0.875rem;
-    }
-    
-    .gestor-avatar {
-        width: 30px;
-        height: 30px;
-        font-size: 0.7rem;
-    }
-    
-    .expediente-icon {
-        width: 35px;
-        height: 35px;
+    .btn-group .btn {
+        border-radius: 0.375rem !important;
+        margin-bottom: 0.25rem;
     }
 }
 
-/* ===== ANIMACIONES ===== */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* ===== DETALLE EXPEDIENTE ===== */
+.detalle-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px 10px 0 0;
 }
 
-.expediente-row {
-    animation: fadeIn 0.3s ease-in-out;
+.detalle-card {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
 }
 
-/* ===== HOVER EFFECTS ===== */
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+.info-section {
+    padding: 1.5rem;
+    border-left: 4px solid #4e73df;
+    background: #f8f9fc;
+    margin-bottom: 1rem;
+}
+
+.gestor-profile {
+    background: linear-gradient(45deg, #4e73df, #224abe);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+}
+
+.gestor-avatar-large {
+    width: 60px;
+    height: 60px;
+    font-size: 20px;
+    font-weight: bold;
+    border: 3px solid rgba(255,255,255,0.3);
+}
+
+.documento-preview {
+    background: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.documento-preview:hover {
+    border-color: #4e73df;
+    background: rgba(78, 115, 223, 0.05);
+}
+
+.status-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.status-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e3e6f0;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 5px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4e73df;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #e3e6f0;
+}
+/* ===== TABLA EXPEDIENTES ===== */
+.expedientes-table {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.expedientes-table thead th {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 1rem 0.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.expedientes-table tbody tr {
+    border-bottom: 1px solid #f1f3f4;
     transition: all 0.2s ease;
 }
 
-.card:hover {
-    box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.2);
+.expedientes-table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(78, 115, 223, 0.05) 0%, rgba(78, 115, 223, 0.02) 100%);
+    transform: scale(1.001);
+}
+
+.expedientes-table tbody td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+    border: none;
+}
+
+.expediente-titulo {
+    font-weight: 600;
+    color: #2c3e50;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.expediente-titulo:hover {
+    color: #4e73df;
+}
+
+/* ===== ACCIONES TABLA ===== */
+.acciones-grupo {
+    min-width: 140px;
+}
+
+.btn-accion {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    transition: all 0.2s ease;
+}
+
+.btn-accion:hover {
+    transform: scale(1.1);
+}
+
+.btn-accion.btn-ver {
+    background: rgba(23, 162, 184, 0.1);
+    border-color: #17a2b8;
+    color: #17a2b8;
+}
+
+.btn-accion.btn-editar {
+    background: rgba(255, 193, 7, 0.1);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.btn-accion.btn-eliminar {
+    background: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+/* ===== PAGINACIÓN ===== */
+.pagination-custom {
+    margin: 2rem 0;
+}
+
+.pagination-custom .page-link {
+    border: none;
+    color: #4e73df;
+    background: transparent;
+    padding: 0.5rem 0.75rem;
+    margin: 0 2px;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+.pagination-custom .page-link:hover {
+    background: rgba(78, 115, 223, 0.1);
+    transform: translateY(-1px);
+}
+
+.pagination-custom .page-item.active .page-link {
+    background: #4e73df;
+    border-color: #4e73df;
+}
+/* ===== BARRA DE BÚSQUEDA ===== */
+.search-container {
+    background: linear-gradient(135deg, #f8f9fc 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e3e6f0;
+}
+
+.search-input-group {
+    position: relative;
+}
+
+.search-input-group .form-control {
+    border-radius: 25px;
+    border: 2px solid #e3e6f0;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    font-size: 0.9rem;
     transition: all 0.3s ease;
+}
+
+.search-input-group .form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 5;
+}
+
+.search-btn {
+    border-radius: 25px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(78, 115, 223, 0.3);
+}
+
+/* ===== FILTROS AVANZADOS ===== */
+.filtros-avanzados {
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e3e6f0;
+    overflow: hidden;
+}
+
+.filtros-header {
+    background: #f8f9fc;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e3e6f0;
+    font-weight: 600;
+    color: #5a5c69;
+}
+
+.filtro-grupo {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.filtro-grupo:last-child {
+    border-bottom: none;
+}
+
+.filtro-label {
+    font-weight: 600;
+    color: #5a5c69;
+    margin-bottom: 0.5rem;
+}
+
+/* ===== RESULTADOS ===== */
+.resultados-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8f9fc;
+    border-radius: 8px;
+    border-left: 4px solid #4e73df;
+}
+
+.resultados-count {
+    font-weight: 600;
+    color: #4e73df;
+}
+
+.resultados-acciones {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ===== ESTADO VACÍO ===== */
+.empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.empty-state-icon {
+    font-size: 4rem;
+    color: #e3e6f0;
+    margin-bottom: 1rem;
+}
+
+.empty-state h4 {
+    color: #5a5c69;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #858796;
+    font-size: 1.1rem;
+    line-height: 1.6;
 }

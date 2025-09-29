@@ -194,7 +194,7 @@
                                             <button onclick="confirmarEliminacionExpediente({{ expediente.id }}, '{{ expediente.titulo|escapejs }}')"
                                                     class="btn btn-outline-danger btn-sm"
                                                     title="Eliminar Expediente">
-                                                <i class="fas fa-trash me-1"></i>Eliminar
+                                                <i class="fas fa-trash me-1"></i>Elimina
                                             </button>
                                             {% endif %}
                                         </div>
@@ -205,7 +205,7 @@
                         </table>
                     </div>
                 </div>
-            </div>
+            </div>r
             
             {% else %}
             <!-- Empty State -->
@@ -230,7 +230,7 @@
                             {% endif %}
                         </p>
                         
-                        {% if puede_crear and not query %}
+                        {% if create and not query %}
                         <a href="{% url 'crear_expediente' %}" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Crear Primer Expediente
                         </a>
