@@ -8,6 +8,8 @@ from .models import Gestor
 from retirementApp.forms import GestorForm, CustomLoginForm, CustomUserCreationForm
 #Importamos autenticacion, login y logout
 from django.contrib.auth import authenticate, login, logout
+#Importamos el modelo User
+from django.contrib.auth.models import User, Group
 #Importamos login_required para proteger vistas y user_passes_test para permisos(se asegura que sea admin)
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Q
@@ -29,7 +31,9 @@ def es_gestor(user):
 def inicio(request):
     return render(request, 'index.html')
 
-                    #** CRUD GESTORES **#
+
+
+#** CRUD GESTORES **#
 #We're usign function based views for simplicity
 
 #views para LOGIN y REGISTRO
@@ -54,10 +58,13 @@ def custom_login(request):
                 login(request, user)
                 messages.success(request, 'Bienvenido/a de nuevo!') #Mensaje de exito
                 #Redirigir segun su rol
-                if user.groups.filter(name='Admin').exists():
-                    return redirect('inicio')
-                else:
+                if user.groups.filter(name='Administrador').exists():
                     return redirect('gestores')
+                #Si es gestor, redirige a los expedientes existentes
+                elif user.groups.filter(name='Gestor').exists():
+                    return redirect('#expedientes') #Redirige a expedientes para gestores
+                else:
+                    messages.error(request, 'No cuenta con una cuenta o rol asignado, contacte a su Manager')            
             else: #Si no es valido, arrojara error
                 messages.error(request, 'Usuario o contraseña incorrectos')
         else:
@@ -86,9 +93,9 @@ def register_user(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save_user()#Guardamos el usuario con el metodo customizado
+            form.save() #Guardamos el usuario con el metodo customizado
             messages.success(request, 'Usuario creado con exito')
-            return redirect('login') #Redirige a login
+            return redirect('gestores') #Redirige a gestores
         else:
             messages.error(request, 'Corrija los errores en el formulario')
     else:
@@ -104,9 +111,29 @@ def crearGestor(request):
         #Procesa formulario
         form = GestorForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Gestor creado exitosamente')
-            return redirect('gestores') #redirige a la lista de gestores
+            #Manejaremos las excepciones al crear un usuario con try-except
+            try:
+                #Instancia sin guardar, por eso commit=False
+                gestor = form.save(commit=False)
+                
+                #Creamos el usuario asociado al gestor
+                user = User.objects.create_user(
+                username=f"{gestor.nombre.lower()}.{gestor.apellido.lower()}",
+                email=gestor.email,
+                password= "temporal123" #asigna contraseña temporal
+                )
+
+                #Asociamos el usuario a gestor
+                grupo_gestor = Group.objects.get(name='Gestor')
+                user.groups.add(grupo_gestor)
+            
+                #Guardamos el gestor
+                gestor.save()
+                messages.success(request, 'Gestor creado exitosamente')
+                return redirect('gestores') #redirige a la lista de gestores
+            
+            except Exception as error:
+                messages.error(request, f'Error al crear Gestor: {error}')
         else:
             messages.error(request, 'Corrija los errores en el formulario')
     else:
@@ -174,12 +201,28 @@ def eliminarGestor(request, id):
     gestor = get_object_or_404(Gestor, id=id)
     #Si es post, eliminamos
     if request.method == 'POST':
-        nombre = f'{gestor.nombre}{gestor.apellido}'
-        gestor.delete()
-        messages.success(request, f'Gestor {nombre} ha sidoa eliminado correctamente')
-        return redirect ('gestores')    
-    data = {
-        'titulo':'Confirmar Eliminacion', 
-        'gestor': gestor
-    }
+        try:
+            #Guardamos el nombre en una variable para el mensaje
+            nombre = f'{gestor.nombre} {gestor.apellido}'
+            
+            # Buscar y eliminar usuario asociado
+            username = f'{gestor.nombre.lower()}.{gestor.apellido.lower()}'
+            #Buscar el usuario
+            user = User.objects.filter(username=username).first()
+            if user:
+                user.delete()
+                messages.success(request, f'Usuario {nombre} ha sido eliminado correctamente')
+            else:
+                messages.warning(request, f'Usuario {nombre} no encontrado')
+
+            # Eliminar el gestor
+            gestor.delete()
+            messages.success(request, f'Gestor {nombre} ha sido eliminado correctamente')
+            return redirect('gestores')
+        
+        except Exception as error:
+            messages.error(request, f'Error al eliminar gestor: {error}')
+            return redirect('gestores')
     
+    # Si no es POST, redirigir a gestores
+    return redirect('gestores')

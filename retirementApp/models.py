@@ -24,8 +24,6 @@ EXPEDIENTE_CHOICES = [
     ('inactivo', 'Inactivo'),
 ]
 
-
-
 #Modelo para los expedientes de pension
 class Expediente(models.Model):
     titulo = models.CharField(max_length=200)
