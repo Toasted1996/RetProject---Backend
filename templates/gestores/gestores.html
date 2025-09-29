@@ -150,8 +150,10 @@
                                                     <i class="fas fa-edit me-1"></i>Editar
                                                 </a>
                                                 <!-- Button funcionando, solo tiene problemas con los caracteres especiales puede arreglarse con DOM y un addEventListener-->
-                                                <button onclick="confirmarEliminacion({{ gestor.id }}, '{{ gestor.nombre }} {{ gestor.apellido }}')"
-                                                        class="btn btn-outline-danger btn-sm"
+                                                <button class="btn btn-outline-danger btn-sm btn-eliminar"
+                                                        data-gestor-id="{{ gestor.id }}"
+                                                        data-gestor-nombre="{{ gestor.nombre }} {{ gestor.apellido }}"
+                                                        data-url="{% url 'eliminar_gestor' gestor.id %}" 
                                                         title="Eliminar Gestor">
                                                     <i class="fas fa-trash me-1"></i>Eliminar
                                                 </button>

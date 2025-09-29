@@ -77,7 +77,7 @@ class CustomLoginForm(AuthenticationForm): #AuthenticationForm ya tiene una logi
 
 
 #Formulario integrado para REGISTRO usando UserCreationForm
-class CustomUserCreationForm(UserCreationForm):
+class CustomUserCreationForm(UserCreationForm):#UserCreationForm ya tiene una logica para registrar usuarios
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class':'form-control', 'placeholder':'nombre@dominio.com'}))
     nombre = forms.CharField(max_length = 30, required = True, widget= forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Nombre'}))
     apellido = forms.CharField(max_length = 30, required = True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Apellido'}))
