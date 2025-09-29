@@ -5,7 +5,7 @@ from django.contrib import messages
 #Importamos los modelos a usar
 from .models import Gestor, Expediente
 #Importamos los formularios a usar
-from retirementApp.forms import GestorForm,ExpedienteForm, CustomLoginForm, CustomUserCreationForm
+from retirementApp.forms import GestorForm,ExpedienteForm, CustomLoginForm
 #Importamos autenticacion, login y logout
 from django.contrib.auth import authenticate, login, logout
 #Importamos el modelo User
@@ -62,7 +62,7 @@ def custom_login(request):
                     return redirect('gestores')
                 #Si es gestor, redirige a los expedientes existentes
                 elif user.groups.filter(name='Gestor').exists():
-                    return redirect('#expedientes') #Redirige a expedientes para gestores
+                    return redirect('expedientes') #Redirige a expedientes para gestores
                 else:
                     messages.error(request, 'No cuenta con una cuenta o rol asignado, contacte a su Manager')            
             else: #Si no es valido, arrojara error
@@ -86,66 +86,49 @@ def custom_logout(request):
 
 
 # VISTA AUTENTICADA PARA ADMINs #
-@login_required(login_url='login')
-@user_passes_test(lambda u: u.groups.filter(name='Administrador').exists())
-def register_user(request):
-    #Esta es la vista para un Admin autenticado, podra crear nuevos usuarios
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save() #Guardamos el usuario con el metodo customizado
-            messages.success(request, 'Usuario creado con exito')
-            return redirect('gestores') #Redirige a gestores
-        else:
-            messages.error(request, 'Corrija los errores en el formulario')
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'auth/register.html', {'form': form, 'title':'Registrar Usuario'})
+# @login_required(login_url='login')
+# @user_passes_test(lambda u: u.groups.filter(name='Administrador').exists())
+# def register_user(request):
+#     #Esta es la vista para un Admin autenticado, podra crear nuevos usuarios
+#     if request.method == 'POST':
+#         form = CustomUserCreationForm(request.POST)
+#         if form.is_valid():
+#             form.save() #Guardamos el usuario con el metodo customizado
+#             messages.success(request, 'Usuario creado con exito')
+#             return redirect('gestores') #Redirige a gestores
+#         else:
+#             messages.error(request, 'Corrija los errores en el formulario')
+#     else:
+#         form = CustomUserCreationForm()
+#     return render(request, 'auth/register.html', {'form': form, 'title':'Registrar Usuario'})
 
 #Vista para crear un gestor
-@login_required(login_url='login') # Protege la vista, solo usuarios autenticados pueden acceder
-@user_passes_test(es_admin) #Solo el administrador puede crear gestores
+@login_required(login_url='login')
+@user_passes_test(es_admin)
 def crearGestor(request):
+    """Vista unificada - Crear Gestor + Usuario"""
     if request.method == 'POST':
-        #Procesa formulario
         form = GestorForm(request.POST)
         if form.is_valid():
-            #Manejaremos las excepciones al crear un usuario con try-except
             try:
-                #Instancia sin guardar, por eso commit=False
-                gestor = form.save(commit=False)
-                
-                #Creamos el usuario asociado al gestor
-                user = User.objects.create_user(
-                username=f"{gestor.nombre.lower()}.{gestor.apellido.lower()}",
-                email=gestor.email,
-                password= "temporal123", #asigna contraseña temporal
-                first_name= gestor.nombre,
-                last_name= gestor.apellido
+                # ✅ Usar el método save_gestor (como save_user en register)
+                gestor = form.save_gestor()
+                messages.success(
+                    request, 
+                    f'Gestor {gestor.nombre} {gestor.apellido} creado exitosamente'
                 )
-                #Asociamos el usuario a gestor
-                grupo_gestor = Group.objects.get(name='Gestor')
-                user.groups.add(grupo_gestor)
-            
-                #Guardamos el gestor
-                gestor.save()
-                messages.success(request, 'Gestor creado exitosamente')
-                return redirect('gestores') #redirige a la lista de gestores
-            
+                return redirect('gestores')
             except Exception as error:
-                messages.error(request, f'Error al crear Gestor: {error}')
+                messages.error(request, f'Error al crear gestor: {error}')
         else:
             messages.error(request, 'Corrija los errores en el formulario')
     else:
-        #Muestra formulario vacio
         form = GestorForm()
-        
-    #Datos para el template
+    
     data = {
-        'titulo':'Crear Gestor',
+        'titulo': 'Crear Gestor',
         'form': form
     }
-    #renderizamos el template con los datos
     return render(request, 'gestores/createGestor.html', data)
 
 @login_required(login_url= 'login')

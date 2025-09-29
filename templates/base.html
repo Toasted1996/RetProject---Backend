@@ -52,7 +52,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 {% if user.is_staff or user.is_superuser %}
-                                    <li><a class="dropdown-item" href="{% url 'register' %}">
+                                    <li><a class="dropdown-item" href="{% url 'crear_gestor' %}">
                                         <i class="fas fa-user-plus me-2"></i>Crear Usuario
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>

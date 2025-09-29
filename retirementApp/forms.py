@@ -3,50 +3,118 @@ from datetime import datetime, timedelta, date, timezone
 #Importamos forms de django
 from django import forms
 #Importamos modelos y fomularios de autenticacion para LOGIN y REGISTRO
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User, Group
 #Importamos modelos a usar 
 from .models import Gestor, Expediente
 
 #Formulario para el modelo gestor con validaciones para rut
+#Formulario UNIFICADO - Crear Gestor + Usuario (Diseño basado en register)
 class GestorForm(forms.ModelForm):
+    # ✅ CAMPOS DE USUARIO (como en register)
+    username = forms.EmailField(
+        required=True,
+        label='Email (Username)',
+        widget=forms.EmailInput(attrs={'class':'form-control', 'placeholder':'email@dominio.com'})
+    )
+    password1 = forms.CharField(
+        label='Contraseña',
+        widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Contraseña'})
+    )
+    password2 = forms.CharField(
+        label='Confirmar Contraseña', 
+        widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Confirme la contraseña'})
+    )
+    
     class Meta:
         model = Gestor
-        fields = ['rut','nombre', 'apellido', 'email']
+        fields = ['rut', 'nombre', 'apellido', 'email']  # Campos específicos del gestor
         widgets = {
-            'rut': forms.TextInput(attrs={'class':'form-control', 'placeholder':'Ingrese RUT'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder':'Ingrese nombre'}),
-            'apellido': forms.TextInput(attrs={'class': 'form-control', 'placeholder':'Ingrese apellido'}),
-            'email': forms.EmailInput(attrs={'class':'form-control', 'placeholder':'Ingrese email'})
+            'rut': forms.TextInput(attrs={'class':'form-control', 'placeholder':'12.345.678-9'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder':'Nombre'}),
+            'apellido': forms.TextInput(attrs={'class': 'form-control', 'placeholder':'Apellido'}),
+            'email': forms.EmailInput(attrs={'class':'form-control', 'placeholder':'Email de contacto'})
         }
         
-    #validacion adicional para el campo RUT
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # ✅ Etiquetas claras
+        self.fields['rut'].label = 'RUT'
+        self.fields['nombre'].label = 'Nombre'
+        self.fields['apellido'].label = 'Apellido'  
+        self.fields['email'].label = 'Email de Contacto'
+        
+        # ✅ Help text como en register
+        self.fields['username'].help_text = 'Este email se usará para hacer login'
+        self.fields['email'].help_text = 'Email para comunicaciones del negocio'
+        self.fields['password1'].help_text = 'Mínimo 8 caracteres'
+        
+    def clean_username(self):
+        """Validar que el email no esté en uso"""
+        username = self.cleaned_data.get('username')
+        if username:
+            if User.objects.filter(username=username).exists():
+                raise forms.ValidationError('Ya existe un usuario con este email')
+        return username
+        
+    def clean_password2(self):
+        """Validar que las contraseñas coincidan (como en register)"""
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+        
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError('Las contraseñas no coinciden')
+        return password2
+        
     def clean_rut(self):
+        """Validación RUT (tu código existente)"""
         rut = self.cleaned_data.get('rut')
         if rut:
-            # Limpiamos el RUT (elimina puntos y espacios, pero mantiene el guión)
             rut_limpio = rut.replace('.', '').replace(' ', '').strip()
             
-            # Verificamos que tenga el formato correcto
             if not rut_limpio:
                 raise forms.ValidationError('El campo RUT es obligatorio')
                 
-            # Si no tiene guión, lo agregamos en la posición correcta
             if '-' not in rut_limpio:
                 if len(rut_limpio) >= 8:
-                    # Agregamos el guión antes del último dígito
                     rut_limpio = rut_limpio[:-1] + '-' + rut_limpio[-1]
                 else:
                     raise forms.ValidationError('El RUT debe tener al menos 8 dígitos')
             
-            # Validamos la longitud final (con guión)
             if len(rut_limpio) < 9 or len(rut_limpio) > 12:
                 raise forms.ValidationError('El RUT debe tener el formato 12345678-9')
             
             return rut_limpio
         
         raise forms.ValidationError('El campo RUT es obligatorio')
-    
+
+    def save_gestor(self, commit=True):
+        """Método para guardar gestor + usuario (como save_user en register)"""
+        # Crear el gestor
+        gestor = super().save(commit=False)
+        
+        if commit:
+            gestor.save()
+            
+            # Crear usuario asociado
+            user = User.objects.create_user(
+                username=self.cleaned_data['username'],
+                email=self.cleaned_data['username'],
+                password=self.cleaned_data['password1'],
+                first_name=gestor.nombre,
+                last_name=gestor.apellido
+            )
+            
+            # Asignar al grupo Gestor
+            grupo_gestor, created = Group.objects.get_or_create(name='Gestor')
+            user.groups.add(grupo_gestor)
+            user.save()
+            
+        return gestor
+
+
+
 
 #Formulario Expediente
 class ExpedienteForm(forms.ModelForm):
@@ -172,37 +240,4 @@ class CustomLoginForm(AuthenticationForm): #AuthenticationForm ya tiene una logi
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control', 'placeholder':'Contraseña'}))
 
 
-#Formulario integrado para REGISTRO usando UserCreationForm
-class CustomUserCreationForm(UserCreationForm):#UserCreationForm ya tiene una logica para registrar usuarios
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class':'form-control', 'placeholder':'nombre@dominio.com'}))
-    nombre = forms.CharField(max_length = 30, required = True, widget= forms.TextInput(attrs={'class':'form-control', 'placeholder': 'Nombre'}))
-    apellido = forms.CharField(max_length = 30, required = True, widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':'Apellido'}))
-    rol = forms.ModelChoiceField(
-        queryset = Group.objects.all(),
-        required = True,
-        help_text = 'Seleccione un rol para el usuario'
-    )
-    
-    class Meta:
-        model = User
-        fields = ('username', 'nombre', 'apellido', 'email', 'password1', 'password2', 'rol')
-        widgets = {
-            'username':forms.TextInput(attrs={'class':'form-control', 'placeholder':'Usuario'}),
-        }
-    #Metodo para guardar al usuario y asignarle grupo segun rol
-    def save_user(self, commit=True):
-        #Guarda el usuario
-        user = super().save(commit=False)
-        #limpiamos los datos pasados
-        user.email =self.cleaned_data['email']
-        user.nombre = self.cleaned_data['nombre']
-        user.apellido = self.cleaned_data['apellido']
-        #Si commit es True, guarda el usuario
-        if commit:
-            user.save()
-            #Asigna un grupo segun el rol seleccionado 
-            rol = self.cleaned_data['rol']
-            user.groups.add(rol)
-            user.save()
-        return user
-            
+
