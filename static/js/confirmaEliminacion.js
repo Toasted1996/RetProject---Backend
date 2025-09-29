@@ -1,27 +1,30 @@
 
 // Function para confirmar la eliminacion de un gestor mediante SweetAlert2
-function confirmarEliminacion(id, nombre, urlPattern = '/gestores/eliminar/') {
+function confirmarEliminacion(gestorId, nombreGestor) {
     Swal.fire({
-        title: '¿Eliminar Gestor?',
-        html: `<strong>${nombre}</strong><br><small>Esta acción no se puede deshacer</small>`,
+        title: '¿Está seguro?',
+        text: `¿Desea eliminar al gestor ${nombreGestor}?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class="fas fa-trash me-1"></i>Eliminar',
-        cancelButtonText: '<i class="fas fa-times me-1"></i>Cancelar',
-        customClass: {
-            confirmButton: 'btn btn-danger',
-            cancelButton: 'btn btn-secondary'
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        buttonStyling: false,
+        customClass:{
+            confirmButton : 'btn btn-danger me-2',
+            cancelButton : 'btn btn-secondary',
+            action : 'gap-3'
         },
-        buttonsStyling: false
+        reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
+            // Crear formulario para envío POST
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = `${urlPattern}${id}/`;
+            form.action = `/gestores/eliminar/${gestorId}/`;
             
-            // Obtener el token CSRF
+            // Agregar token CSRF
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             const csrfInput = document.createElement('input');
             csrfInput.type = 'hidden';
@@ -29,8 +32,9 @@ function confirmarEliminacion(id, nombre, urlPattern = '/gestores/eliminar/') {
             csrfInput.value = csrfToken;
             form.appendChild(csrfInput);
             
+            // Agregar al DOM y enviar
             document.body.appendChild(form);
             form.submit();
         }
     });
-};
+}
