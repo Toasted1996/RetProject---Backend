@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import inicio,listaGestores, crearGestor, editarGestor, eliminarGestor, custom_login, crearExpediente, listaExpedientes, custom_logout
+from .views import inicio,listaGestores, crearGestor, editarGestor, eliminarGestor, register_user, custom_login, custom_logout, crearExpediente, listaExpedientes, editarExpediente, eliminarExpediente, detalleExpediente
 
 urlpatterns = [
     path('', inicio, name='inicio'),
@@ -9,7 +9,7 @@ urlpatterns = [
     #Autenticacion integrada en Django
     path('login/', custom_login, name='login'),
     path('logout/', custom_logout, name='logout'),  
-    #path('register/', register_user, name='register'),
+    path('register/', register_user, name='register'),
 
     #URLs CRUD GESTORES
     path('gestores/', listaGestores, name='gestores'),
@@ -23,7 +23,7 @@ urlpatterns = [
     #URLs CRUD EXPEDIENTES
     path('expedientes/', listaExpedientes, name='expedientes'),
     path('expedientes/crear/', crearExpediente, name='crear_expediente'),
-    # path('expedientes/editar/<int:id>/', editarExpediente, name='editar_expediente'),
-    # path('expedientes/eliminar/<int:id>/', eliminarExpediente, name='eliminar_expediente'),
-    #path('expedientes/detalle/<int:id>/', detalleExpediente, name='detalle_expediente')
+    path('expedientes/editar/<int:id>/', editarExpediente, name='editar_expediente'),
+    path('expedientes/eliminar/<int:id>/', eliminarExpediente, name='eliminar_expediente'),
+    path('expedientes/detalle/<int:id>/', detalleExpediente, name='detalle_expediente')
 ]

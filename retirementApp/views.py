@@ -5,38 +5,35 @@ from django.contrib import messages
 #Importamos los modelos a usar
 from .models import Gestor, Expediente
 #Importamos los formularios a usar
-from retirementApp.forms import GestorForm,ExpedienteForm, CustomLoginForm
+from retirementApp.forms import GestorForm, ExpedienteForm, CustomLoginForm
 #Importamos autenticacion, login y logout
 from django.contrib.auth import authenticate, login, logout
 #Importamos el modelo User
 from django.contrib.auth.models import User, Group
 #Importamos login_required para proteger vistas y user_passes_test para permisos(se asegura que sea admin)
 from django.contrib.auth.decorators import login_required, user_passes_test
+#Importamos Q para manejar comparaciones complejas en las consultas
 from django.db.models import Q
+from datetime import date
 
 # Create your views here.
 
 #Verifica si el usuario es admin
 def es_admin(user):
     #Verifica que el usuario pertenezca al grupo Administrador
-    return user.groups.filter(name='Administrador').exists()
+    return user.is_authenticated and (user.is_superuser or user.groups.filter(name='Administrador').exists())
     
 
 #Verifica si es gestor
 def es_gestor(user):
-    return user.groups.filter(name='Gestor').exists()
-
+    return user.is_authenticated and user.groups.filter(name='Gestor').exists()
 
 
 def inicio(request):
     return render(request, 'index.html')
 
 
-
-#** CRUD GESTORES **#
-#We're usign function based views for simplicity
-
-#views para LOGIN y REGISTRO
+#Logica de Autenticacion para LOGIN
 def custom_login(request):
     #Si el usuario ya esta autenticado, redirige al inicio
     if request.user.is_authenticated:
@@ -77,6 +74,12 @@ def custom_login(request):
 
 #Views para LOGOUT
 def custom_logout(request):
+
+
+#** CRUD GESTORES **#
+#We're usign function based views for simplicity
+
+#views para LOGIN y REGISTRO
     #Si el request es de un usuario autenticado, obtiene su nombre, sino usa 'Usuario'
     name = request.user.first_name if request.user.is_authenticated and request.user.first_name else 'Usuario'
     logout(request)
@@ -85,22 +88,63 @@ def custom_logout(request):
     return redirect('inicio')  #Redirige a inicio
 
 
-# VISTA AUTENTICADA PARA ADMINs #
-# @login_required(login_url='login')
-# @user_passes_test(lambda u: u.groups.filter(name='Administrador').exists())
-# def register_user(request):
-#     #Esta es la vista para un Admin autenticado, podra crear nuevos usuarios
-#     if request.method == 'POST':
-#         form = CustomUserCreationForm(request.POST)
-#         if form.is_valid():
-#             form.save() #Guardamos el usuario con el metodo customizado
-#             messages.success(request, 'Usuario creado con exito')
-#             return redirect('gestores') #Redirige a gestores
-#         else:
-#             messages.error(request, 'Corrija los errores en el formulario')
-#     else:
-#         form = CustomUserCreationForm()
-#     return render(request, 'auth/register.html', {'form': form, 'title':'Registrar Usuario'})
+#Vista protegida para registro de usuarios - SOLO ADMIN
+@login_required(login_url='login')
+@user_passes_test(es_admin)
+def register_user(request):
+    #Vista para que Admin cree nuevos usuarios
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        password2 = request.POST.get('password2', '').strip()
+        rol = request.POST.get('rol', '').strip()
+        
+        errores = []
+        if not all([username, email, password, password2, rol]):
+            errores.append('Todos los campos son obligatorios.')
+        
+        elif password != password2:
+            errores.append('Las contraseñas no coinciden.')
+
+        elif User.objects.filter(username=username).exists():
+            errores.append('El nombre de usuario ya existe.')
+
+        elif User.objects.filter(email=email).exists():
+            errores.append('El correo electrónico ya esta en uso.')
+            
+        elif len(password) < 6:
+            errores.append('La contraseña debe tener al menos 6 caracteres.')
+            
+        if errores:
+            for error in errores:
+                messages.error(request, error)
+        else:
+            try:
+                # Creacion del usuario
+                nuevo_usuario = User.objects.create_user(
+                    username = username,
+                    email = email,
+                    password = password,
+                )    
+
+                #Asignacion de rol
+                if rol  == 'Administrador':
+                    grupo = Group.objects.get(name='Administrador')
+                else:
+                    grupo = Group.objects.get(name='Gestor')
+                nuevo_usuario.groups.add(grupo)
+                nuevo_usuario.save()
+                messages.success(request, f'Usuario {username} creado con exito' )
+                return redirect('gestores')
+            except Exception as error:
+                messages.error(request, f'Error al crear usuario: {error}')
+            
+    data = {
+        'title': 'Registrar Usuario'
+    }
+    return render(request, 'auth/register.html', data)
+
 
 #Vista para crear un gestor
 @login_required(login_url='login')
@@ -111,7 +155,7 @@ def crearGestor(request):
         form = GestorForm(request.POST)
         if form.is_valid():
             try:
-                # ✅ Usar el método save_gestor (como save_user en register)
+                #Usar el método save_gestor (como save_user en register)
                 gestor = form.save_gestor()
                 messages.success(
                     request, 
@@ -134,18 +178,44 @@ def crearGestor(request):
 @login_required(login_url= 'login')
 #view para lista todos los gestores con filtro y busqueda
 def listaGestores(request):
-    gestores = Gestor.objects.all()
-    # Filtrado por busqueda
+    #Verificar rol
+    if es_gestor(request.user):
+        #El gestor solo podra ver info limitada - Su propio perfil con los expedientes asignados
+        try:
+            gestor_usuario = Gestor.objects.get(
+                nombre = request.user.first_name,
+                apellido = request.user.last_name
+            )
+            #Filtro para mostrar su propio perfil
+            gestores = Gestor.objects.filter(id=gestor_usuario.id)
+            create = False
+            titulo = 'Mi perfil'
+        except Gestor.DoesNotExist:
+            messages.error(request, 'No se encontro el gestor asociado a su cuenta. Contacte a su Manager.')
+    #Si es Admin podra ver todos los gestores
+    elif es_admin(request.user):
+        gestores = Gestor.objects.all()
+        create = True
+        titulo = 'Gestores'
+    #Si no tiene rol asignada indicara error
+    else:
+        messages.error(request, 'No cuenta con permisos para acceder a esta sección.')
+        return redirect('login')
+    
+    #Filtrado para admins
     query = request.GET.get('query', '').strip()
-    if query:
+    if query and create:  # Solo si es admin
         gestores = gestores.filter(
-            Q(nombre__icontains=query) | Q(apellido__icontains=query) | Q(rut__icontains=query)| Q(email__icontains=query)
+            Q(nombre__icontains=query) | Q(apellido__icontains=query) | 
+            Q(email__icontains=query) | Q(rut__icontains=query)
         )
-
-    #Datos para el template
+    
+    # ✅ ESTE ES EL RETURN QUE FALTABA - SIEMPRE SE DEBE EJECUTAR
     data = {
         'gestores': gestores,
-        'title': 'Gestores'
+        'query': query,
+        'create': create,
+        'title': titulo
     }
     return render(request, 'gestores/gestores.html', data)
 
@@ -211,49 +281,54 @@ def eliminarGestor(request, id):
     return redirect('gestores')
 
 
-
-
 #* CRUD EXPEDIENTES *#
 
 @login_required(login_url='login')
 def listaExpedientes(request):
-    #Si es admin, ve todos los expedientes, si es gestor solo vera los suyos
-    if es_admin(request.user):
-        expedientes = Expediente.objects.all().select_related('gestor')
-        titulo = 'Expedientes'
-        create = True
-    
-    elif es_gestor(request.user):
+    #Verifica roles
+    if es_gestor(request.user):
+        #Gestor vera solo expedientes asignados a el
         try:
-            #Buscara solo los expedientes del gestor logueado
-            gestor = Gestor.objects.get(
-                nombre = request.user.first_name,
-                apellido = request.user.last_name
+            gestor_usuario = Gestor.objects.get(
+                nombre=request.user.first_name, 
+                apellido= request.user.last_name
             )
-            expedientes = Expediente.objects.filter(gestor=gestor)
-            titulo = 'Mis Expedientes'
+            expedientes = Expediente.objects.filter(gestor = gestor_usuario)
             create = False
+            titulo = 'Mis expedientes asignados'
         except Gestor.DoesNotExist:
             expedientes = Expediente.objects.none()
-            messages.error(request, 'No se encontró el gestor asociado a su cuenta. Contacte a su Manager.')
-    else:#Sin rol asociado
-        messages.error(request, 'No cuenta con permiso para ver expedientes. Contacte a su Manager.')
-    
-    #Filtro para busqueda de expedientes
+            create = False
+            titulo = 'Expedientes'
+            messages.warning(request, 'No se encontro su perfil de gestor')
+    #Si es admin podra crear expediente, ver expedientes, editarlos y eliminarlos
+    elif es_admin(request.user):
+        expedientes = Expediente.objects.all()
+        create = True
+        titulo = 'Gestion de Expedientes'
+    #Si no cuenta con ningun rol arrojara mensaje y sera redirigido a login 
+    else:
+        messages.error(request, 'No cuenta con permisos para acceder a esta seccion')
+        return redirect('login')
+
+    #Filtro para busquedas
     query = request.GET.get('query', '').strip()
     if query:
-        #Puede filtar por varios campos, incluyendo campos de gestor asociado
-        expedientes =expedientes.filter(
-            Q(titulo__icontains=query) | Q(tipo_pension__icontains=query) | Q(estado_expediente__icontains=query) | Q(gestor__nombre__icontains=query) | Q(gestor__apellido__icontains=query)
+            expedientes = expedientes.filter(
+            Q(titulo__icontains=query) | Q(tipo_pension__icontains=query)
+            |Q(gestor__nombre__icontains=query) | Q(gestor__apellido__icontains=query)
         )
-    #Se arman los datos para el template    
+    #Informacion de fecha actual para comparar vencimientos
+    today = date.today()
     data = {
-        'expedientes' : expedientes,
-        'titulo' : titulo,
-        'create' : create,
-        'query' : query
-    }
-    return render(request, 'expedientes/expedientes.html', data)
+        'expedientes': expedientes,
+        'query':query,
+        'create':create,
+        'title': titulo,
+        'today': today
+        }
+    return render(request, 'expedientes/expedientes.html', data)    
+
 
 
 @login_required(login_url='login')
@@ -280,3 +355,110 @@ def crearExpediente(request):
         'form': form
     }
     return render(request, 'expedientes/createExpediente.html', data)
+
+
+
+@login_required(login_url='login')
+def detalleExpediente(request, id):
+    """Vista detalle de expediente - Admin y Gestor pueden ver"""
+    expediente = get_object_or_404(Expediente, id=id)
+    
+    # Verificar permisos
+    if es_gestor(request.user):
+        # Gestor solo puede ver expedientes asignados a él
+        try:
+            gestor_obj = Gestor.objects.get(
+                nombre=request.user.first_name,
+                apellido=request.user.last_name
+            )
+            if expediente.gestor != gestor_obj:
+                messages.error(request, 'No tiene permisos para ver este expediente')
+                return redirect('expedientes')
+        except Gestor.DoesNotExist:
+            messages.error(request, 'No se encontró su perfil de gestor')
+            return redirect('expedientes')
+    elif not es_admin(request.user):
+        messages.error(request, 'No tiene permisos para acceder a esta sección')
+        return redirect('login')
+    
+    # Información adicional para el template
+    hoy = date.today()
+    dias_para_vencer = (expediente.fecha_vencimiento - hoy).days if expediente.fecha_vencimiento else None
+    
+    data = {
+        'expediente': expediente,
+        'title': f'Detalle - {expediente.titulo}',
+        'puede_editar': es_admin(request.user),
+        'puede_eliminar': es_admin(request.user),
+        'today': hoy,
+        'dias_para_vencer': dias_para_vencer,
+        'vencido': expediente.fecha_vencimiento <= hoy if expediente.fecha_vencimiento else False
+    }
+    return render(request, 'expedientes/detalle.html', data)
+
+
+@login_required(login_url='login')
+@user_passes_test(es_admin)  # Solo Admin puede editar
+def editarExpediente(request, id):
+    #El expediente solo podra ser eliminado por el Admin
+    expediente = get_object_or_404(Expediente, id=id)
+    #Si es post, procesa el formulario
+    if request.method == 'POST':
+        #Recibe los datos, incluyendo archivos e instancia a expediente
+        form = ExpedienteForm(request.POST, request.FILES, instance=expediente)
+        if form.is_valid():
+            try: #Cuando el formato es valido lo guarda y maneja la respuesta contraria con except
+                expediente_actualizado = form.save()
+                messages.success(request, f'Expediente "{expediente_actualizado.titulo}" actualizado exitosamente')
+                return redirect('expedientes')
+            except Exception as error:
+                messages.error(request, f'Error al actualizar expediente: {error}')
+        else:
+            # Mostrar errores específicos del formulario
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+    else:
+        form = ExpedienteForm(instance=expediente)
+    
+    data = {
+        'form': form,
+        'expediente': expediente,
+        'title': f'Editar - {expediente.titulo}',
+        'action': 'editar',
+        'gestores': Gestor.objects.all()  # Para el select del gestor
+    }
+    return render(request, 'expedientes/form.html', data)
+
+
+@login_required(login_url='login')
+@user_passes_test(es_admin)  # Solo Admin puede eliminar
+def eliminarExpediente(request, id):
+    """Eliminar expediente - Solo Administradores"""
+    expediente = get_object_or_404(Expediente, id=id)
+    
+    if request.method == 'POST':
+        try:
+            titulo_expediente = expediente.titulo
+            gestor_nombre = f"{expediente.gestor.nombre} {expediente.gestor.apellido}"
+            
+            # Eliminar archivo si existe
+            if expediente.documentos:
+                try:
+                    expediente.documentos.delete()
+                except:
+                    pass  # Si no se puede eliminar el archivo, continuar
+            
+            expediente.delete()
+            messages.success(request, f'Expediente "{titulo_expediente}" de {gestor_nombre} eliminado exitosamente')
+        except Exception as error:
+            messages.error(request, f'Error al eliminar expediente: {error}')
+        
+        return redirect('expedientes')
+    
+    # Si es GET, mostrar página de confirmación
+    data = {
+        'expediente': expediente,
+        'title': f'Eliminar - {expediente.titulo}'
+    }
+    return render(request, 'expedientes/confirmar_eliminar.html', data)
