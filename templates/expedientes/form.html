@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} - Sistema de Auditorías{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/expedientes.css' %}">
+<style>
+.edit-indicator {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+    color: white;
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+.current-info {
+    background: rgba(78, 115, 223, 0.1);
+    border: 1px solid rgba(78, 115, 223, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+}
+.form-section {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #4e73df;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.current-file {
+    background: rgba(28, 200, 138, 0.1);
+    border: 1px solid rgba(28, 200, 138, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        {{ titulo }}
+                        {% if action == 'editar' %}
+                        <span class="edit-indicator ms-2">
+                            <i class="fas fa-edit me-1"></i>EDITANDO
+                        </span>
+                        {% endif %}
+                    </h1>
+                    <p class="mb-0 text-muted">
+                        {% if action == 'editar' %}
+                            Modifique la información del expediente
+                        {% else %}
+                            Complete la información del nuevo expediente
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="btn-toolbar">
+                    {% if action == 'editar' %}
+                    <a href="{% url 'detalle_expediente' expediente.id %}" class="btn btn-outline-info me-2">
+                        <i class="fas fa-eye me-2"></i>Ver Detalle
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'expedientes' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                </div>
+            </div>
+
+            {% if action == 'editar' %}
+            <!-- Información Actual -->
+            <div class="current-info mb-4">
+                <h6 class="text-primary mb-2">
+                    <i class="fas fa-info-circle me-2"></i>Información Actual del Expediente
+                </h6>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <small class="text-muted">ID:</small> <strong>#{{ expediente.id }}</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Creado:</small> <strong>{{ expediente.fecha_inicio|date:"d/m/Y" }}</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Estado:</small> 
+                        <span class="badge bg-{% if expediente.estado_expediente == 'activo' %}success{% else %}secondary{% endif %}">
+                            {{ expediente.get_estado_expediente_display }}
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Gestor:</small> <strong>{{ expediente.gestor.nombre }} {{ expediente.gestor.apellido }}</strong>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Card -->
+            <div class="card shadow-sm">
+                <div class="card-header {% if action == 'editar' %}bg-warning text-dark{% else %}bg-primary text-white{% endif %}">
+                    <h5 class="mb-0">
+                        <i class="fas fa-{% if action == 'editar' %}edit{% else %}plus{% endif %} me-2"></i>{{ titulo }}
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Información Básica -->
+                        <div class="form-section">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Información Básica
+                            </h6>
+                            
+                            <div class="row g-4">
+                                <!-- Título del Expediente -->
+                                <div class="col-12">
+                                    <label for="{{ form.titulo.id_for_label }}" class="form-label required">
+                                        <i class="fas fa-heading me-2"></i>{{ form.titulo.label }}
+                                    </label>
+                                    {{ form.titulo }}
+                                    {% if form.titulo.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.titulo.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        {% if action == 'editar' %}
+                                            Modifique el título del expediente si es necesario
+                                        {% else %}
+                                            Ingrese un título descriptivo para el expediente
+                                        {% endif %}
+                                    </small>
+                                </div>
+
+                                <!-- Tipo de Pensión -->
+                                <div class="col-md-6">
+                                    <label for="{{ form.tipo_pension.id_for_label }}" class="form-label required">
+                                        <i class="fas fa-tag me-2"></i>{{ form.tipo_pension.label }}
+                                    </label>
+                                    {{ form.tipo_pension }}
+                                    {% if form.tipo_pension.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.tipo_pension.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Estado del Expediente -->
+                                <div class="col-md-6">
+                                    <label for="{{ form.estado_expediente.id_for_label }}" class="form-label required">
+                                        <i class="fas fa-info-circle me-2"></i>{{ form.estado_expediente.label }}
+                                    </label>
+                                    {{ form.estado_expediente }}
+                                    {% if form.estado_expediente.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.estado_expediente.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gestor y Fechas -->
+                        <div class="form-section">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-calendar me-2"></i>Asignación y Fechas
+                            </h6>
+                            
+                            <div class="row g-4">
+                                <!-- Gestor Asignado -->
+                                <div class="col-md-6">
+                                    <label for="{{ form.gestor.id_for_label }}" class="form-label required">
+                                        <i class="fas fa-user me-2"></i>{{ form.gestor.label }}
+                                    </label>
+                                    {{ form.gestor }}
+                                    {% if form.gestor.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.gestor.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        {% if action == 'editar' %}
+                                            Reasignar expediente a otro gestor si es necesario
+                                        {% else %}
+                                            Seleccione el gestor responsable del expediente
+                                        {% endif %}
+                                    </small>
+                                </div>
+
+                                <!-- Fecha de Vencimiento -->
+                                <div class="col-md-6">
+                                    <label for="{{ form.fecha_vencimiento.id_for_label }}" class="form-label required">
+                                        <i class="fas fa-calendar me-2"></i>{{ form.fecha_vencimiento.label }}
+                                    </label>
+                                    {{ form.fecha_vencimiento }}
+                                    {% if form.fecha_vencimiento.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.fecha_vencimiento.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    {% if action == 'editar' %}
+                                    <small class="form-text text-muted">
+                                        Fecha actual: {{ expediente.fecha_vencimiento|date:"d/m/Y" }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Documentos -->
+                        <div class="form-section">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-paperclip me-2"></i>Documentos Adjuntos
+                            </h6>
+                            
+                            {% if action == 'editar' and expediente.documentos %}
+                            <div class="current-file mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-file me-2 text-success"></i>
+                                        <strong>Archivo actual:</strong>
+                                        <span class="ms-2">{{ expediente.documentos.name|slice:"10:" }}</span>
+                                    </div>
+                                    <a href="{{ expediente.documentos.url }}" target="_blank" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-download me-1"></i>Descargar
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.documentos.id_for_label }}" class="form-label">
+                                    <i class="fas fa-upload me-2"></i>
+                                    {% if action == 'editar' %}
+                                        Reemplazar Documento
+                                    {% else %}
+                                        Adjuntar Documento
+                                    {% endif %}
+                                </label>
+                                {{ form.documentos }}
+                                {% if form.documentos.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.documentos.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    {% if action == 'editar' %}
+                                        Seleccione un nuevo archivo para reemplazar el actual
+                                    {% else %}
+                                        Formato permitido: .xlm, .xlsm (Máx: 5MB)
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div class="d-flex gap-2">
+                                {% if action == 'editar' %}
+                                <a href="{% url 'detalle_expediente' expediente.id %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                {% else %}
+                                <a href="{% url 'expedientes' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                {% endif %}
+                                
+                                <button type="reset" class="btn btn-outline-warning">
+                                    <i class="fas fa-undo me-2"></i>Limpiar
+                                </button>
+                            </div>
+                            
+                            <button type="submit" class="btn {% if action == 'editar' %}btn-warning{% else %}btn-primary{% endif %}">
+                                <i class="fas fa-save me-2"></i>
+                                {% if action == 'editar' %}
+                                    Actualizar Expediente
+                                {% else %}
+                                    Crear Expediente
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/confirmaEliminacion.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validación de fechas
+    const fechaVencimiento = document.querySelector('input[name="fecha_vencimiento"]');
+    
+    if (fechaVencimiento) {
+        fechaVencimiento.addEventListener('change', function() {
+            const fechaInicio = document.querySelector('input[name="fecha_inicio"]');
+            
+            if (fechaInicio && fechaInicio.value) {
+                const inicio = new Date(fechaInicio.value);
+                const vencimiento = new Date(this.value);
+                
+                if (vencimiento <= inicio) {
+                    Swal.fire({
+                        title: 'Fecha Inválida',
+                        text: 'La fecha de vencimiento debe ser posterior a la fecha de inicio',
+                        icon: 'warning',
+                        confirmButtonText: 'Entendido'
+                    });
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    // Previsualización de archivo
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileName = file.name;
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                
+                let info = document.querySelector('.file-info');
+                if (!info) {
+                    info = document.createElement('div');
+                    info.className = 'file-info mt-2 p-2 bg-light rounded';
+                    fileInput.parentNode.appendChild(info);
+                }
+                
+                info.innerHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i><strong>' + fileName + '</strong> (' + fileSize + ' MB)</small>';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

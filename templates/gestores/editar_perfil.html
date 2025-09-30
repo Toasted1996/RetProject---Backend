@@ -1,0 +1,185 @@
+<!-- templates/gestores/editar_perfil.html -->
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Sistema de Auditorías{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/gestores.css' %}">
+<style>
+.readonly-field {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed;
+}
+.admin-badge {
+    background: linear-gradient(45deg, #ffc107, #fd7e14);
+    color: white;
+}
+.gestor-badge {
+    background: linear-gradient(45deg, #6f42c1, #e83e8c);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">{{ title }}</h1>
+                    <p class="text-muted mb-0">
+                        {% if es_admin %}
+                            Edite la información básica del gestor
+                        {% else %}
+                            Actualice su información de contacto
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div>
+                    {% if es_admin %}
+                    <span class="badge admin-badge me-2">
+                        <i class="fas fa-crown me-1"></i>Administrador
+                    </span>
+                    {% else %}
+                    <span class="badge gestor-badge me-2">
+                        <i class="fas fa-user-tie me-1"></i>Gestor
+                    </span>
+                    {% endif %}
+                    
+                    <a href="{% url 'gestores' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario -->
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Información Básica
+                    </h5>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Nombre -->
+                        <div class="mb-3">
+                            <label for="{{ form.nombre.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-user me-1"></i>Nombre *
+                            </label>
+                            {% if readonly_campos %}
+                            {{ form.nombre|add_class:"readonly-field" }}
+                            <small class="text-muted">
+                                <i class="fas fa-lock me-1"></i>{{ form.nombre.help_text }}
+                            </small>
+                            {% else %}
+                            {{ form.nombre }}
+                            {% endif %}
+                            
+                            {% if form.nombre.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.nombre.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Apellido -->
+                        <div class="mb-3">
+                            <label for="{{ form.apellido.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-user me-1"></i>Apellido *
+                            </label>
+                            {% if readonly_campos %}
+                            {{ form.apellido|add_class:"readonly-field" }}
+                            <small class="text-muted">
+                                <i class="fas fa-lock me-1"></i>{{ form.apellido.help_text }}
+                            </small>
+                            {% else %}
+                            {{ form.apellido }}
+                            {% endif %}
+                            
+                            {% if form.apellido.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.apellido.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="mb-4">
+                            <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold">
+                                <i class="fas fa-envelope me-1"></i>Correo Electrónico *
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.email.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                {% if es_admin %}
+                                    Correo para notificaciones del sistema
+                                {% else %}
+                                    Su correo de contacto personal
+                                {% endif %}
+                            </small>
+                        </div>
+                        
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'gestores' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if es_admin %}
+                                    Actualizar Gestor
+                                {% else %}
+                                    Guardar Cambios
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mejorar UX para campos readonly
+    const readonlyFields = document.querySelectorAll('.readonly-field');
+    readonlyFields.forEach(field => {
+        field.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Campo Protegido',
+                text: 'Solo los administradores pueden modificar nombres y apellidos',
+                icon: 'info',
+                confirmButtonText: 'Entendido'
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

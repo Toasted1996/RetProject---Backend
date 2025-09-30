@@ -26,9 +26,16 @@
                 
                 {% if create %}
                 <div class="btn-toolbar" role="toolbar">
-                    <a href="{% url 'crear_expediente' %}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Nuevo Expediente
-                    </a>
+                    <div class="btn-group me-2">
+                        <a href="{% url 'crear_expediente' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Crear Expediente
+                        </a>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{% url 'exportar_expedientes_excel' %}" class="btn btn-success">
+                            <i class="fas fa-file-excel me-2"></i>Exportar Excel
+                        </a>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -69,10 +76,10 @@
                     {% if query %}
                         Mostrando resultados para "<strong>{{ query }}</strong>" - 
                     {% endif %}
-                    <strong>{{ expedientes.count }}</strong> expediente{{ expedientes.count|pluralize }}
+                    <strong>{{ total_expedientes }}</strong> expediente{{ total_expedientes|pluralize }}
                 </small>
                 
-                {% if expedientes.count > 0 %}
+                {% if total_expedientes > 0 %}
                 <div class="d-flex gap-2">
                     <span class="badge bg-success">
                         <i class="fas fa-check-circle me-1"></i>Activos: 
@@ -83,7 +90,7 @@
             </div>
 
             <!-- Expedientes Table/Cards -->
-            {% if expedientes.count > 0 %}
+            {% if expedientes %}
             <div class="card shadow-sm">
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -174,27 +181,28 @@
                                     </td>
                                     
                                     <td>
-                                        <div class="btn-group-vertical btn-group-sm" role="group">
-                                            <!-- Ver Detalle - Todos pueden ver -->
+                                        <div class="btn-group btn-group-sm mt-1" role="group">
+                                            <!-- VER DETALLE - Todos pueden ver -->
                                             <a href="{% url 'detalle_expediente' expediente.id %}" 
                                             class="btn btn-outline-info btn-sm" 
-                                            title="Ver Detalle">
-                                                <i class="fas fa-eye me-1"></i>Ver Detalle
+                                            title="Ver detalle del expediente">
+                                                <i class="fas fa-eye"></i>
                                             </a>
                                             
-                                            {% if puede_crear %}
-                                            <!-- Editar - Solo Administradores -->
+                                            {% if create %}
+                                            <!-- EDITAR - Solo Admin -->
                                             <a href="{% url 'editar_expediente' expediente.id %}" 
                                             class="btn btn-outline-warning btn-sm" 
-                                            title="Editar Expediente">
-                                                <i class="fas fa-edit me-1"></i>Editar
+                                            title="Editar expediente">
+                                                <i class="fas fa-edit"></i>
                                             </a>
                                             
-                                            <!-- Eliminar - Solo Administradores -->
-                                            <button onclick="confirmarEliminacionExpediente({{ expediente.id }}, '{{ expediente.titulo|escapejs }}')"
-                                                    class="btn btn-outline-danger btn-sm"
-                                                    title="Eliminar Expediente">
-                                                <i class="fas fa-trash me-1"></i>Elimina
+                                            <!-- ELIMINAR - Solo Admin -->
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger btn-sm" 
+                                                    onclick="confirmarEliminacion('{{ expediente.id }}', '{{ expediente.titulo|escapejs }}')" 
+                                                    title="Eliminar expediente">
+                                                <i class="fas fa-trash"></i>
                                             </button>
                                             {% endif %}
                                         </div>
@@ -204,8 +212,76 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Paginación -->
+                    {% if expedientes.has_other_pages %}
+                    <div class="card-footer bg-white border-0">
+                        <nav aria-label="Paginación de expedientes">
+                            <ul class="pagination pagination-sm justify-content-center mb-0">
+                                <!-- Primera página -->
+                                {% if expedientes.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}query={{ query }}&{% endif %}page=1" title="Primera página">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                <!-- Página anterior -->
+                                {% if expedientes.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}query={{ query }}&{% endif %}page={{ expedientes.previous_page_number }}" title="Página anterior">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                <!-- Páginas numeradas -->
+                                {% for num in expedientes.paginator.page_range %}
+                                    {% if expedientes.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% elif num > expedientes.number|add:'-3' and num < expedientes.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if query %}query={{ query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                <!-- Página siguiente -->
+                                {% if expedientes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}query={{ query }}&{% endif %}page={{ expedientes.next_page_number }}" title="Página siguiente">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                <!-- Última página -->
+                                {% if expedientes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if query %}query={{ query }}&{% endif %}page={{ expedientes.paginator.num_pages }}" title="Última página">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        
+                        <!-- Info de paginación -->
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                Mostrando {{ expedientes.start_index }} - {{ expedientes.end_index }} de {{ expedientes.paginator.count }} expedientes
+                                {% if query %}
+                                (filtrados por: "{{ query }}")
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
-            </div>r
+            </div>
             
             {% else %}
             <!-- Empty State -->
@@ -223,7 +299,7 @@
                         <p class="text-muted mb-4">
                             {% if query %}
                                 Intente con otros términos de búsqueda
-                            {% elif puede_crear %}
+                            {% elif create %}
                                 Comience creando su primer expediente
                             {% else %}
                                 No tiene expedientes asignados en este momento
@@ -254,5 +330,61 @@
 {% endblock %}
 
 {% block js %}
+<script>
+// Función para confirmar eliminación
+function confirmarEliminacion(id, titulo) {
+    Swal.fire({
+        title: '¿Está seguro?',
+        html: `
+            <div class="text-start">
+                <p>Esta acción eliminará permanentemente:</p>
+                <div class="alert alert-warning">
+                    <strong>📁 ${titulo}</strong><br>
+                    <small>ID: #${id}</small>
+                </div>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Esta acción no se puede deshacer
+                </p>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-trash me-2"></i>Sí, eliminar',
+        cancelButtonText: '<i class="fas fa-times me-2"></i>Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirigir a la URL de eliminación
+            window.location.href = `/expedientes/eliminar/${id}/`;
+        }
+    });
+}
+
+// Mejorar experiencia de tabla en mobile
+document.addEventListener('DOMContentLoaded', function() {
+    // Resaltar filas al hover
+    const rows = document.querySelectorAll('.expediente-row');
+    rows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+    
+    // Tooltip para botones
+    const tooltips = document.querySelectorAll('[title]');
+    tooltips.forEach(element => {
+        element.addEventListener('mouseenter', function() {
+            this.setAttribute('data-bs-toggle', 'tooltip');
+        });
+    });
+});
+</script>
+<script src="{% static 'js/confirmaEliminacion.js' %}"></script>
 <script src="{% static 'js/expedientes.js' %}"></script>
 {% endblock %}
