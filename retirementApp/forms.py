@@ -113,7 +113,55 @@ class GestorForm(forms.ModelForm):
             
         return gestor
 
-
+# En forms.py - CREAR NUEVO FORMULARIO:
+#Formulario para editar perfil (datos basicos) - UNIFICADO para gestores y admins
+class EditarPerfilForm(forms.ModelForm):
+    """Formulario para editar datos básicos de perfil"""
+    
+    class Meta:
+        model = Gestor
+        fields = ['nombre', 'apellido', 'email']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese nombre'
+            }),
+            'apellido': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ingrese apellido'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'correo@ejemplo.com'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        es_admin = kwargs.pop('es_admin', False)
+        super().__init__(*args, **kwargs)
+        
+        # Configurar campos según rol
+        if not es_admin:
+            # GESTOR: Solo puede editar email
+            self.fields['nombre'].widget.attrs['readonly'] = True
+            self.fields['apellido'].widget.attrs['readonly'] = True
+            self.fields['nombre'].help_text = "Solo administradores pueden cambiar nombres"
+            self.fields['apellido'].help_text = "Solo administradores pueden cambiar apellidos"
+        
+        # Labels personalizados
+        self.fields['nombre'].label = "Nombre"
+        self.fields['apellido'].label = "Apellido" 
+        self.fields['email'].label = "Correo Electrónico"
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        gestor_id = self.instance.id if self.instance else None
+        
+        # Verificar email único
+        if Gestor.objects.filter(email=email).exclude(id=gestor_id).exists():
+            raise forms.ValidationError("Este correo ya está en uso por otro gestor")
+        
+        return email
 
 
 #Formulario Expediente
