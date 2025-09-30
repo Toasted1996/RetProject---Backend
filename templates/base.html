@@ -29,13 +29,20 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
-                        <!-- NAVBAR PARA USUARIOS AUTENTICADOS -->
+                        <!-- ✅ NAVEGACIÓN DIFERENCIADA POR ROLES -->
+                        
+                        {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
+                        <!-- 👨‍💼 NAVEGACIÓN PARA ADMINISTRADORES -->
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="{% url 'inicio' %}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark fw-semibold" href="{% url 'gestores' %}">
                                 <i class="fas fa-users me-2"></i>Gestores
                             </a>
                         </li>
-                        
                         <li class="nav-item">
                             <a class="nav-link text-dark fw-semibold" href="{% url 'expedientes' %}">
                                 <i class="fas fa-folder me-2"></i>Expedientes
@@ -43,28 +50,67 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark fw-semibold" href="#">
+                                <i class="fas fa-chart-line me-2"></i>Reportes
+                            </a>
+                        </li>
+                        
+                        {% elif user.groups.all.0.name == 'Gestor' %}
+                        <!-- 👤 NAVEGACIÓN PARA GESTORES - ✅ CORREGIDO -->
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="{% url 'gestores' %}">
+                                <i class="fas fa-user-circle me-2"></i>Mi Perfil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="{% url 'expedientes' %}">
+                                <i class="fas fa-folder me-2"></i>Mis Expedientes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-semibold" href="#">
                                 <i class="fas fa-clipboard-check me-2"></i>Auditorías
                             </a>
                         </li>
-                        <!-- DROPDOWN USUARIO -->
+                        {% endif %}
+                        
+                        <!-- 🔽 DROPDOWN USUARIO - PARA TODOS LOS AUTENTICADOS -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-dark fw-semibold" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user-circle me-2"></i>{{ user.first_name|default:user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                {% if user.is_staff or user.is_superuser %}
-                                    <li><a class="dropdown-item" href="{% url 'crear_gestor' %}">
-                                        <i class="fas fa-user-plus me-2"></i>Crear Usuario
+                                <!-- Información del usuario -->
+                                <li class="dropdown-header">
+                                    <small class="text-muted">
+                                        {% if user.is_superuser or user.groups.all.0.name == 'Administrador' %}
+                                            <i class="fas fa-crown me-1"></i>Administrador
+                                        {% elif user.groups.all.0.name == 'Gestor' %}
+                                            <i class="fas fa-user-tie me-1"></i>Gestor
+                                        {% else %}
+                                            <i class="fas fa-user me-1"></i>Usuario
+                                        {% endif %}
+                                    </small>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                
+                                <!-- ✅ OPCIONES SEGÚN ROL - CORREGIDO -->
+                                {% if user.groups.all.0.name == 'Gestor' %}
+                                    <!-- GESTOR: Opciones para gestionar su perfil -->
+                                    <li><a class="dropdown-item" href="{% url 'gestores' %}">
+                                        <i class="fas fa-user-edit me-2"></i>Editar Mi Perfil
                                     </a></li>
-                                    <li><hr class="dropdown-divider"></li>
                                 {% endif %}
-                                <li><a class="dropdown-item" href="{% url 'logout' %}">
+                                
+                                <!-- Cerrar sesión - para todos -->
+                                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
                                     <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
                                 </a></li>
                             </ul>
                         </li>
+                        
                     {% else %}
-                        <!-- NAVBAR PARA USUARIOS NO AUTENTICADOS -->
+                        <!-- 🚪 NAVEGACIÓN PARA USUARIOS NO AUTENTICADOS -->
                         <li class="nav-item">
                             <a class="nav-link text-dark fw-semibold" href="{% url 'inicio' %}">
                                 <i class="fas fa-home me-2"></i>Inicio
